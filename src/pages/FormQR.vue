@@ -442,6 +442,53 @@
                                 </div>
                             </template>
 
+                            <template v-else-if="selectedType === '2D Barcode'">
+                                <div class="bg-white rounded p-2 flex flex-col gap-4 items-start justify-start flex-1 relative shadow-sm">
+                                    <div class="flex flex-col gap-3 items-start justify-start self-stretch shrink-0 relative">
+                                        <div class="text-sm font-medium text-gray-700 mb-2">
+                                            2D Barcode - {{ selectedMode === 'dynamic' ? 'Dynamic' : 'Static' }} Mode
+                                        </div>
+                                        
+                                        <input-field-vue 
+                                            class="w-full" 
+                                            label="Title"
+                                            placeholder="My Data Matrix" 
+                                            v-model="formData.barcode_title" 
+                                            required 
+                                        />
+                                        
+                                        <input-field-vue 
+                                            class="w-full" 
+                                            label="Data"
+                                            placeholder="Hello World 123" 
+                                            v-model="formData.barcode_data" 
+                                            type="textarea"
+                                            rows="4"
+                                            required 
+                                        />
+                                        
+                                        <div v-if="selectedMode === 'dynamic'" class="flex items-center gap-2">
+                                            <input 
+                                                type="checkbox" 
+                                                id="analytics-barcode" 
+                                                v-model="formData.analytics"
+                                                class="w-4 h-4 text-[#0c768a] border-gray-300 rounded focus:ring-[#0c768a]"
+                                            >
+                                            <label for="analytics-barcode" class="text-sm text-gray-700">Enable Analytics Tracking</label>
+                                        </div>
+                                        
+                                        <div class="px-3.5 pb-3 flex flex-row gap-[18px] items-start justify-end self-stretch shrink-0">
+                                            <button
+                                                type="submit"
+                                                class="bg-[#0c768a] rounded px-4 py-2 text-white hover:bg-opacity-90 transition-colors duration-300"
+                                            >
+                                                Generate 2D Barcode
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+
                             <template v-else>
                                 <p class="text-[#0c768a] text-lg text-center">Coming Soon.</p>
                             </template>
@@ -511,7 +558,11 @@ export default {
                 description: '',
                 // PDF fields
                 title: '',
-                analytics: false
+                analytics: false,
+                // 2D Barcode fields
+                barcode_title: '',
+                barcode_data: ''
+// ... existing code ...
             },
             showQRCodeModal: false,
             qrCodeContent: '',
@@ -544,8 +595,7 @@ export default {
             } else if (this.selectedType === 'Virtual Card') {
                 await this.generateVCardQRCode();
             } else if (this.selectedType === 'Website') {
-                this.qrCodeContent = this.formData.website.trim();
-                this.showQRCodeModal = true;
+                await this.generateWebsiteQRCode();
             } else if (this.selectedType === 'Wi-Fi') {
                 await this.generateWiFiQRCode();
             } else if (this.selectedType === 'Email') {
@@ -556,6 +606,8 @@ export default {
                 await this.generatePDFQRCode();
             } else if (this.selectedType === 'Images') {
                 await this.generateImageQRCode();
+            } else if (this.selectedType === '2D Barcode') {
+                await this.generate2DBarcodeQRCode();
             }
         },
 
@@ -576,6 +628,72 @@ export default {
                 }
                 
                 this.selectedFile = file;
+            }
+        },
+
+        async generateWebsiteQRCode() {
+            try {
+                const isDynamic = this.selectedMode === 'dynamic';
+                const title = this.qrCodeName || `${isDynamic ? 'Dynamic' : 'Static'}WebsiteQR`;
+                
+                const payload = {
+                    is_dynamic: isDynamic,
+                    title: title,
+                    content: {
+                        url: this.formData.website.trim()
+                    },
+                    analytics: isDynamic,
+                    active: true
+                };
+
+                const response = await axios.post('/api/qr', payload);
+                
+                if (response.data) {
+                    let qrContent;
+                    
+                    if (isDynamic) {
+                        // For dynamic QR codes, use the redirect URL from backend
+                        if (response.data.redirect_url) {
+                            qrContent = response.data.redirect_url;
+                        } else if (response.data.short_url) {
+                            // Construct full URL from short_url identifier
+                            qrContent = `${config.apiBaseUrl}/scan/${response.data.short_url}`;
+                        } else {
+                            qrContent = response.data.qr_code;
+                        }
+                        
+                        // If backend doesn't provide proper URL, create a fallback
+                        if (!qrContent || typeof qrContent === 'object') {
+                            console.warn('Dynamic QR: Backend should return redirect_url or short_url, falling back to website URL');
+                            qrContent = this.formData.website.trim();
+                        }
+                    } else {
+                        // For static QR codes, always use the website URL
+                        qrContent = response.data.qr_code || response.data.content;
+                        
+                        // If the content is an object, extract the URL
+                        if (typeof qrContent === 'object') {
+                            qrContent = qrContent.url || this.formData.website.trim();
+                        }
+                        
+                        // If it's still not a string or empty, use the form data
+                        if (!qrContent || typeof qrContent !== 'string') {
+                            qrContent = this.formData.website.trim();
+                        }
+                    }
+                    
+                    this.qrCodeContent = qrContent;
+                    this.showQRCodeModal = true;
+                    
+                    // Log for debugging
+                    console.log(`Generated ${isDynamic ? 'Dynamic' : 'Static'} Website QR:`, qrContent);
+                } else {
+                    alert('Error generating QR code: No data received');
+                }
+            } catch (error) {
+                console.error('Error generating Website QR code:', error);
+                const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
+                alert(`Failed to generate QR code: ${errorMessage}`);
             }
         },
 
@@ -1123,6 +1241,62 @@ export default {
                 alert(`Failed to generate Image QR code: ${errorMessage}`);
             } finally {
                 this.isUploading = false;
+            }
+        },
+        
+        async generate2DBarcodeQRCode() {
+            try {
+                const isDynamic = this.selectedMode === 'dynamic';
+                
+                const payload = {
+                    title: this.formData.barcode_title.trim(),
+                    data: this.formData.barcode_data.trim(),
+                    is_dynamic: isDynamic,
+                    analytics: isDynamic ? this.formData.analytics : false
+                };
+
+                const response = await axios.post('/api/qr/barcode', payload);
+                
+                if (response.data) {
+                    let qrContent;
+                    
+                    if (isDynamic) {
+                        // For dynamic QR codes, use the redirect URL from backend
+                        if (response.data.redirect_url) {
+                            qrContent = response.data.redirect_url;
+                        } else if (response.data.short_url) {
+                            // Construct full URL from short_url identifier
+                            qrContent = `${config.apiBaseUrl}/scan/${response.data.short_url}`;
+                        } else {
+                            qrContent = response.data.qr_code;
+                        }
+                        
+                        // If backend doesn't provide proper URL, create a fallback
+                        if (!qrContent || typeof qrContent === 'object') {
+                            console.warn('Dynamic QR: Backend should return redirect_url or short_url, falling back to barcode data');
+                            qrContent = this.formData.barcode_data.trim();
+                        }
+                    } else {
+                        // For static QR codes, use the barcode data directly
+                        qrContent = response.data.qr_code || response.data.content || this.formData.barcode_data.trim();
+                        
+                        // If the content is an object, extract the data
+                        if (typeof qrContent === 'object') {
+                            qrContent = qrContent.data || this.formData.barcode_data.trim();
+                        }
+                    }
+                    
+                    this.qrCodeContent = qrContent;
+                    this.showQRCodeModal = true;
+                    
+                    console.log(`Generated ${isDynamic ? 'Dynamic' : 'Static'} 2D Barcode QR:`, qrContent);
+                } else {
+                    alert('Error generating QR code: No data received');
+                }
+            } catch (error) {
+                console.error('Error generating 2D Barcode QR code:', error);
+                const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
+                alert(`Failed to generate 2D Barcode QR code: ${errorMessage}`);
             }
         },
         
