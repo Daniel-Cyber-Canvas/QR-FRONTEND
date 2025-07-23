@@ -135,13 +135,17 @@ export default {
     },
     methods: {
         goToForm(selectedCode, mode) {
-            this.$router.push({ 
-                path: '/qr-form', 
-                query: { 
-                    type: selectedCode.name,
-                    mode: mode
-                } 
-            });
+            if (selectedCode.name === 'Website') {
+                this.$router.push({ path: '/qrmanagement/website' });
+            } else {
+                this.$router.push({ 
+                    path: '/qr-form', 
+                    query: { 
+                        type: selectedCode.name,
+                        mode: mode
+                    } 
+                });
+            }
         }
     }
 }
