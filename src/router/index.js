@@ -44,6 +44,11 @@ const router = createRouter({
       component: () => import('@/pages/QRManagement.vue')
     },
     {
+      path: '/qrmanagement/website',
+      name: 'website-qr',
+      component: () => import('@/pages/qrmanagement/Website.vue')
+    },
+    {
       path: '/domains',
       name: 'domains',
       component: () => import('@/pages/Home.vue') // Placeholder - redirect to home for now
