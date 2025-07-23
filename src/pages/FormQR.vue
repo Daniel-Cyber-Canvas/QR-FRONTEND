@@ -88,6 +88,9 @@
                             <template v-else-if="selectedType === 'Website'">
                                 <div class="bg-white rounded p-2 flex flex-col gap-4 items-start justify-start flex-1 relative shadow-sm">
                                     <div class="flex flex-col gap-3 items-start justify-start self-stretch shrink-0">
+                                        <div class="text-sm font-medium text-gray-700 mb-2">
+                                            Website QR Code - {{ selectedMode === 'dynamic' ? 'Dynamic' : 'Static' }} Mode
+                                        </div>
                                         <input-field-vue 
                                             class="w-full" 
                                             label="Website URL"
@@ -97,12 +100,38 @@
                                             required 
                                         />
                                         <div class="px-3.5 pb-3 flex flex-row gap-[18px] items-start justify-end self-stretch shrink-0">
-                                            <!-- <button-vue class="bg-gray-200 border-none" text="Next" /> -->
                                             <button
                                                 type="submit"
                                                 class="bg-[#0c768a] rounded px-4 py-2 text-white hover:bg-opacity-90 transition-colors duration-300"
                                             >
-                                                Generate QR Code
+                                                Generate Website QR Code
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <template v-else-if="selectedType === 'Text'">
+                                <div class="bg-white rounded p-2 flex flex-col gap-4 items-start justify-start flex-1 relative shadow-sm">
+                                    <div class="flex flex-col gap-3 items-start justify-start self-stretch shrink-0">
+                                        <div class="text-sm font-medium text-gray-700 mb-2">
+                                            Text QR Code - {{ selectedMode === 'dynamic' ? 'Dynamic' : 'Static' }} Mode
+                                        </div>
+                                        <input-field-vue 
+                                            class="w-full" 
+                                            label="Text Content"
+                                            placeholder="Hello World! This is a static text QR code." 
+                                            v-model="formData.text" 
+                                            type="textarea"
+                                            rows="4"
+                                            required 
+                                        />
+                                        <div class="px-3.5 pb-3 flex flex-row gap-[18px] items-start justify-end self-stretch shrink-0">
+                                            <button
+                                                type="submit"
+                                                class="bg-[#0c768a] rounded px-4 py-2 text-white hover:bg-opacity-90 transition-colors duration-300"
+                                            >
+                                                Generate Text QR Code
                                             </button>
                                         </div>
                                     </div>
@@ -538,6 +567,7 @@ export default {
                 job: '',
                 address: '',
                 website: '',
+                text: '', // Add text field for Text QR codes
                 // WiFi fields
                 ssid: '',
                 password: '',
@@ -562,7 +592,6 @@ export default {
                 // 2D Barcode fields
                 barcode_title: '',
                 barcode_data: ''
-// ... existing code ...
             },
             showQRCodeModal: false,
             qrCodeContent: '',
@@ -608,6 +637,8 @@ export default {
                 await this.generateImageQRCode();
             } else if (this.selectedType === '2D Barcode') {
                 await this.generate2DBarcodeQRCode();
+            } else if (this.selectedType === 'Text') {
+                await this.generateTextQRCode();
             }
         },
 
@@ -637,11 +668,12 @@ export default {
                 const title = this.qrCodeName || `${isDynamic ? 'Dynamic' : 'Static'}WebsiteQR`;
                 
                 const payload = {
-                    is_dynamic: isDynamic,
+                    type: "website",
                     title: title,
                     content: {
                         url: this.formData.website.trim()
                     },
+                    is_dynamic: isDynamic,
                     analytics: isDynamic,
                     active: true
                 };
@@ -1297,6 +1329,73 @@ export default {
                 console.error('Error generating 2D Barcode QR code:', error);
                 const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
                 alert(`Failed to generate 2D Barcode QR code: ${errorMessage}`);
+            }
+        },
+        
+        async generateTextQRCode() {
+            try {
+                const isDynamic = this.selectedMode === 'dynamic';
+                const title = this.qrCodeName || `${isDynamic ? 'Dynamic' : 'Static'}TextQR`;
+                
+                const payload = {
+                    type: "text",
+                    title: title,
+                    content: {
+                        text: this.formData.text.trim()
+                    },
+                    is_dynamic: isDynamic,
+                    analytics: isDynamic,
+                    active: true
+                };
+
+                const response = await axios.post('/api/qr', payload);
+                
+                if (response.data) {
+                    let qrContent;
+                    
+                    if (isDynamic) {
+                        // For dynamic QR codes, use the redirect URL from backend
+                        if (response.data.redirect_url) {
+                            qrContent = response.data.redirect_url;
+                        } else if (response.data.short_url) {
+                            // Construct full URL from short_url identifier
+                            qrContent = `${config.apiBaseUrl}/scan/${response.data.short_url}`;
+                        } else {
+                            qrContent = response.data.qr_code;
+                        }
+                        
+                        // If backend doesn't provide proper URL, create a fallback
+                        if (!qrContent || typeof qrContent === 'object') {
+                            console.warn('Dynamic QR: Backend should return redirect_url or short_url, falling back to text content');
+                            qrContent = this.formData.text.trim();
+                        }
+                    } else {
+                        // For static QR codes, always use the text content
+                        qrContent = response.data.qr_code || response.data.content;
+                        
+                        // If the content is an object, extract the text
+                        if (typeof qrContent === 'object') {
+                            qrContent = qrContent.text || this.formData.text.trim();
+                        }
+                        
+                        // If it's still not a string or empty, use the form data
+                        if (!qrContent || typeof qrContent !== 'string') {
+                            qrContent = this.formData.text.trim();
+                        }
+                    }
+                    
+                    this.qrCodeContent = qrContent;
+                    this.showQRCodeModal = true;
+                    
+                    // Log for debugging
+                    console.log(`Generated ${isDynamic ? 'Dynamic' : 'Static'} Text QR:`, qrContent);
+                } else {
+                    alert('Error generating QR code: No data received');
+                }
+            } catch (error) {
+                console.error('Error generating Text QR code:', error);
+                const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
+                alert(`Failed to generate QR code: ${errorMessage}`);
             }
         },
         
