@@ -518,6 +518,118 @@
                                 </div>
                             </template>
 
+                            <template v-else-if="selectedType === 'App'">
+                                <div class="bg-white rounded p-2 flex flex-col gap-4 items-start justify-start flex-1 relative shadow-sm">
+                                    <div class="flex flex-col gap-3 items-start justify-start self-stretch shrink-0 relative">
+                                        <div class="text-sm font-medium text-gray-700 mb-2">
+                                            App QR Code - Dynamic Mode
+                                        </div>
+                                        
+                                        <input-field-vue 
+                                            class="w-full" 
+                                            label="App Name"
+                                            placeholder="MyAwesome App" 
+                                            v-model="formData.app_name" 
+                                            required 
+                                        />
+                                        
+                                        <input-field-vue 
+                                            class="w-full" 
+                                            label="App Store URL"
+                                            placeholder="https://apps.apple.com/app/myawesome-app/id123456789" 
+                                            v-model="formData.app_url" 
+                                            type="url"
+                                            required 
+                                        />
+                                        
+                                        <input-field-vue 
+                                            class="w-full" 
+                                            label="Description"
+                                            placeholder="Get our app from the App Store" 
+                                            v-model="formData.app_description" 
+                                            type="textarea"
+                                            rows="3"
+                                        />
+                                        
+                                        <div class="flex items-center gap-2">
+                                            <input 
+                                                type="checkbox" 
+                                                id="analytics-app" 
+                                                v-model="formData.analytics"
+                                                class="w-4 h-4 text-[#0c768a] border-gray-300 rounded focus:ring-[#0c768a]"
+                                                checked
+                                            >
+                                            <label for="analytics-app" class="text-sm text-gray-700">Enable Analytics Tracking</label>
+                                        </div>
+                                        
+                                        <div class="px-3.5 pb-3 flex flex-row gap-[18px] items-start justify-end self-stretch shrink-0">
+                                            <button
+                                                type="submit"
+                                                class="bg-[#0c768a] rounded px-4 py-2 text-white hover:bg-opacity-90 transition-colors duration-300"
+                                            >
+                                                Generate App QR Code
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <template v-else-if="selectedType === 'Business Page'">
+                                <div class="bg-white rounded p-2 flex flex-col gap-4 items-start justify-start flex-1 relative shadow-sm">
+                                    <div class="flex flex-col gap-3 items-start justify-start self-stretch shrink-0 relative">
+                                        <div class="text-sm font-medium text-gray-700 mb-2">
+                                            Business Page QR Code - Dynamic Mode
+                                        </div>
+                                        
+                                        <input-field-vue 
+                                            class="w-full" 
+                                            label="Business Name"
+                                            placeholder="Brew & Bean Coffee" 
+                                            v-model="formData.business_name" 
+                                            required 
+                                        />
+                                        
+                                        <input-field-vue 
+                                            class="w-full" 
+                                            label="Business Website URL"
+                                            placeholder="https://brewandbean.com" 
+                                            v-model="formData.business_url" 
+                                            type="url"
+                                            required 
+                                        />
+                                        
+                                        <input-field-vue 
+                                            class="w-full" 
+                                            label="Description"
+                                            placeholder="Visit our business page" 
+                                            v-model="formData.business_description" 
+                                            type="textarea"
+                                            rows="3"
+                                        />
+                                        
+                                        <div class="flex items-center gap-2">
+                                            <input 
+                                                type="checkbox" 
+                                                id="analytics-business" 
+                                                v-model="formData.analytics"
+                                                class="w-4 h-4 text-[#0c768a] border-gray-300 rounded focus:ring-[#0c768a]"
+                                                checked
+                                            >
+                                            <label for="analytics-business" class="text-sm text-gray-700">Enable Analytics Tracking</label>
+                                        </div>
+                                        
+                                        <div class="px-3.5 pb-3 flex flex-row gap-[18px] items-start justify-end self-stretch shrink-0">
+                                            <button
+                                                type="submit"
+                                                class="bg-[#0c768a] rounded px-4 py-2 text-white hover:bg-opacity-90 transition-colors duration-300"
+                                            >
+                                                Generate Business Page QR Code
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+
                             <template v-else>
                                 <p class="text-[#0c768a] text-lg text-center">Coming Soon.</p>
                             </template>
@@ -588,10 +700,18 @@ export default {
                 description: '',
                 // PDF fields
                 title: '',
-                analytics: false,
+                analytics: true, // Default to true for dynamic QR codes
                 // 2D Barcode fields
                 barcode_title: '',
-                barcode_data: ''
+                barcode_data: '',
+                // App fields
+                app_name: '',
+                app_url: '',
+                app_description: '',
+                // Business Page fields
+                business_name: '',
+                business_url: '',
+                business_description: ''
             },
             showQRCodeModal: false,
             qrCodeContent: '',
@@ -639,6 +759,10 @@ export default {
                 await this.generate2DBarcodeQRCode();
             } else if (this.selectedType === 'Text') {
                 await this.generateTextQRCode();
+            } else if (this.selectedType === 'App') {
+                await this.generateAppQRCode();
+            } else if (this.selectedType === 'Business Page') {
+                await this.generateBusinessPageQRCode();
             }
         },
 
@@ -1394,6 +1518,112 @@ export default {
                 }
             } catch (error) {
                 console.error('Error generating Text QR code:', error);
+                const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
+                alert(`Failed to generate QR code: ${errorMessage}`);
+            }
+        },
+        
+        async generateAppQRCode() {
+            try {
+                const title = this.qrCodeName || 'AppQR';
+                
+                const payload = {
+                    type: "app",
+                    title: title,
+                    content: {
+                        name: this.formData.app_name.trim(),
+                        url: this.formData.app_url.trim(),
+                        description: this.formData.app_description.trim()
+                    },
+                    is_dynamic: true, // App QR codes are always dynamic
+                    analytics: this.formData.analytics,
+                    active: true
+                };
+
+                const response = await axios.post('/api/qr', payload);
+                
+                if (response.data) {
+                    let qrContent;
+                    
+                    // For dynamic QR codes, use the redirect URL from backend
+                    if (response.data.redirect_url) {
+                        qrContent = response.data.redirect_url;
+                    } else if (response.data.short_url) {
+                        // Construct full URL from short_url identifier
+                        qrContent = `${config.apiBaseUrl}/scan/${response.data.short_url}`;
+                    } else {
+                        qrContent = response.data.qr_code;
+                    }
+                    
+                    // If backend doesn't provide proper URL, create a fallback
+                    if (!qrContent || typeof qrContent === 'object') {
+                        console.warn('Dynamic QR: Backend should return redirect_url or short_url, falling back to app URL');
+                        qrContent = this.formData.app_url.trim();
+                    }
+                    
+                    this.qrCodeContent = qrContent;
+                    this.showQRCodeModal = true;
+                    
+                    // Log for debugging
+                    console.log('Generated App QR:', qrContent);
+                } else {
+                    alert('Error generating QR code: No data received');
+                }
+            } catch (error) {
+                console.error('Error generating App QR code:', error);
+                const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
+                alert(`Failed to generate QR code: ${errorMessage}`);
+            }
+        },
+        
+        async generateBusinessPageQRCode() {
+            try {
+                const title = this.qrCodeName || 'BusinessPageQR';
+                
+                const payload = {
+                    type: "business_page",
+                    title: title,
+                    content: {
+                        name: this.formData.business_name.trim(),
+                        url: this.formData.business_url.trim(),
+                        description: this.formData.business_description.trim()
+                    },
+                    is_dynamic: true, // Business Page QR codes are always dynamic
+                    analytics: this.formData.analytics,
+                    active: true
+                };
+
+                const response = await axios.post('/api/qr', payload);
+                
+                if (response.data) {
+                    let qrContent;
+                    
+                    // For dynamic QR codes, use the redirect URL from backend
+                    if (response.data.redirect_url) {
+                        qrContent = response.data.redirect_url;
+                    } else if (response.data.short_url) {
+                        // Construct full URL from short_url identifier
+                        qrContent = `${config.apiBaseUrl}/scan/${response.data.short_url}`;
+                    } else {
+                        qrContent = response.data.qr_code;
+                    }
+                    
+                    // If backend doesn't provide proper URL, create a fallback
+                    if (!qrContent || typeof qrContent === 'object') {
+                        console.warn('Dynamic QR: Backend should return redirect_url or short_url, falling back to business URL');
+                        qrContent = this.formData.business_url.trim();
+                    }
+                    
+                    this.qrCodeContent = qrContent;
+                    this.showQRCodeModal = true;
+                    
+                    // Log for debugging
+                    console.log('Generated Business Page QR:', qrContent);
+                } else {
+                    alert('Error generating QR code: No data received');
+                }
+            } catch (error) {
+                console.error('Error generating Business Page QR code:', error);
                 const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
                 alert(`Failed to generate QR code: ${errorMessage}`);
             }
