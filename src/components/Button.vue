@@ -1,6 +1,7 @@
 <template>
     <button
     :class="buttonClasses"
+    @click="handleClick"
   >
     <div :class="textClasses">
       {{ text }}
@@ -42,6 +43,11 @@ import { defineComponent } from 'vue';
                 }
                 
                 return `${baseClasses} text-[#ffffff]`;
+            }
+        },
+        methods: {
+            handleClick(event) {
+                this.$emit('click', event);
             }
         }
     });
