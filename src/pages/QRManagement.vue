@@ -135,9 +135,56 @@ export default {
     },
     methods: {
         goToForm(selectedCode, mode) {
-            if (selectedCode.name === 'Website') {
-                this.$router.push({ path: '/qrmanagement/website' });
+            const serviceName = selectedCode.name.toLowerCase().replace(/\s+/g, '');
+            
+            // Route mapping for each service
+            const routeMap = {
+                'website': {
+                    static: '/qr/website/static',
+                    dynamic: '/qr/website/dynamic'
+                },
+                'virtualcard': {
+                    static: '/qr/virtualcard/static',
+                    dynamic: '/qr/virtualcard/dynamic'
+                },
+                'email': {
+                    static: '/qr/email/static'
+                },
+                'sms': {
+                    static: '/qr/sms/static'
+                },
+                'text': {
+                    static: '/qr/text/static'
+                },
+                'wi-fi': {
+                    static: '/qr/wifi/static'
+                },
+                'pdf': {
+                    dynamic: '/qr/pdf/dynamic'
+                },
+                'images': {
+                    dynamic: '/qr/images/dynamic'
+                },
+                'app': {
+                    dynamic: '/qr/app/dynamic'
+                },
+                'businesspage': {
+                    dynamic: '/qr/businesspage/dynamic'
+                },
+                'event': {
+                    dynamic: '/qr/event/dynamic'
+                },
+                '2dbarcode': {
+                    dynamic: '/qr/barcode2d/dynamic'
+                }
+            };
+        
+            // Get the route for the selected service and mode
+            const serviceRoutes = routeMap[serviceName];
+            if (serviceRoutes && serviceRoutes[mode]) {
+                this.$router.push({ path: serviceRoutes[mode] });
             } else {
+                // Fallback to original FormQR.vue for services not yet implemented
                 this.$router.push({ 
                     path: '/qr-form', 
                     query: { 
