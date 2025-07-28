@@ -149,11 +149,17 @@ export default {
                 const payload = {
                     is_dynamic: false,
                     title: title,
+                    service: 'virtualcard', // Add service field
                     content: {
+                        firstName: this.formData.firstName.trim(),
+                        lastName: this.formData.lastName.trim(),
                         name: `${this.formData.firstName.trim()} ${this.formData.lastName.trim()}`,
                         organization: this.formData.company.trim(),
+                        company: this.formData.company.trim(),
                         title: this.formData.job.trim(),
+                        job: this.formData.job.trim(),
                         phone: this.formData.phone.trim(),
+                        phone2: this.formData.phone2.trim(),
                         email: this.formData.email.trim(),
                         address: this.formData.address.trim()
                     },
@@ -164,20 +170,8 @@ export default {
                 const response = await axios.post('/api/qr', payload);
                 
                 if (response.data) {
-                    let qrContent;
-                    
-                    // For static QR codes, always use vCard format
-                    qrContent = response.data.qr_code || response.data.content;
-                    
-                    // If the content is an object, format it as vCard string
-                    if (typeof qrContent === 'object') {
-                        qrContent = this.generateVCardString(qrContent);
-                    }
-                    
-                    // If it's still not a string or empty, create vCard format from form data
-                    if (!qrContent || typeof qrContent !== 'string') {
-                        qrContent = this.generateVCardString(this.formData);
-                    }
+                    // For static virtual cards, always generate vCard content directly
+                    const qrContent = this.generateVCardString(this.formData);
                     
                     this.qrCodeContent = qrContent;
                     this.showQRCodeModal = true;
@@ -195,20 +189,39 @@ export default {
         },
 
         generateVCardString(data) {
-            const fields = [
-                'BEGIN:VCARD',
-                'VERSION:3.0',
-                `FN:${data.name || `${data.firstName} ${data.lastName}`}`,
-                `N:${data.lastName || ''};${data.firstName || ''};;;`,
-                data.phone && `TEL;TYPE=CELL:${data.phone}`,
-                data.email && `EMAIL:${data.email}`,
-                data.organization && `ORG:${data.organization}`,
-                data.title && `TITLE:${data.title}`,
-                data.address && `ADR;TYPE=WORK:;;${data.address};;;;`,
-                'END:VCARD'
-            ].filter(Boolean).join('\n');
+            // Create properly formatted vCard without extra spaces
+            const fullName = data.name || `${data.firstName || ''} ${data.lastName || ''}`.trim();
+            const lastName = data.lastName || '';
+            const firstName = data.firstName || '';
+            const organization = data.organization || data.company || '';
+            const title = data.title || data.job || '';
+            const phone = data.phone || '';
+            const email = data.email || '';
+            const address = data.address || '';
 
-            return fields;
+            let vcard = 'BEGIN:VCARD\n';
+            vcard += 'VERSION:3.0\n';
+            vcard += `FN:${fullName}\n`;
+            vcard += `N:${lastName};${firstName};;;\n`;
+            
+            if (phone) {
+                vcard += `TEL;TYPE=CELL:${phone}\n`;
+            }
+            if (email) {
+                vcard += `EMAIL:${email}\n`;
+            }
+            if (organization) {
+                vcard += `ORG:${organization}\n`;
+            }
+            if (title) {
+                vcard += `TITLE:${title}\n`;
+            }
+            if (address) {
+                vcard += `ADR;TYPE=WORK:;;${address};;;;\n`;
+            }
+            vcard += 'END:VCARD';
+
+            return vcard;
         }
     }
 }

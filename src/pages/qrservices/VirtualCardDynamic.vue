@@ -95,21 +95,13 @@
                                 </div>
                             </div>
 
-                            <!-- QR Code Display Section -->
-                            <div class="bg-white rounded p-2 flex flex-col gap-4 items-center justify-start w-[400px] relative shadow-sm">
-                                <div class="text-sm font-medium text-gray-700 mb-2">
-                                    QR Code Preview
-                                </div>
-                                <div class="w-full h-[300px] border-2 border-dashed border-gray-300 rounded flex items-center justify-center">
-                                    <span class="text-gray-500">QR Code will appear here</span>
-                                </div>
-                            </div>
+                            
                         </form>
 
                         <!-- QR Code Modal -->
                         <q-r-code-modal 
                             v-if="showQRCodeModal" 
-                            :qr-content="qrCodeContent"
+                            :qrCodeContent="qrCodeContent"
                             @close="showQRCodeModal = false"
                         />
                     </div>
@@ -162,18 +154,24 @@ export default {
                 const payload = {
                     is_dynamic: true,
                     title: title,
+                    service: 'virtualcard',
                     content: {
+                        firstName: this.formData.firstName.trim(),
+                        lastName: this.formData.lastName.trim(),
                         name: `${this.formData.firstName.trim()} ${this.formData.lastName.trim()}`,
                         organization: this.formData.company.trim(),
+                        company: this.formData.company.trim(),
                         title: this.formData.job.trim(),
+                        job: this.formData.job.trim(),
                         phone: this.formData.phone.trim(),
+                        phone2: this.formData.phone2.trim(),
                         email: this.formData.email.trim(),
                         address: this.formData.address.trim()
                     },
                     analytics: this.formData.analytics,
                     active: true
                 };
-
+        
                 const response = await axios.post('/api/qr', payload);
                 
                 if (response.data) {
@@ -186,11 +184,7 @@ export default {
                         // Construct full URL from short_url identifier
                         qrContent = `${config.apiBaseUrl}/scan/${response.data.short_url}`;
                     } else {
-                        qrContent = response.data.qr_code;
-                    }
-                    
-                    // If backend doesn't provide proper URL, create a fallback
-                    if (!qrContent || typeof qrContent === 'object') {
+                        // Fallback: if backend doesn't provide redirect URL, use vCard format directly
                         console.warn('Dynamic QR: Backend should return redirect_url or short_url, falling back to vCard format');
                         qrContent = this.generateVCardString(this.formData);
                     }
