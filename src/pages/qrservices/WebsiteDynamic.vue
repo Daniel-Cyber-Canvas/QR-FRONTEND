@@ -1,13 +1,20 @@
 <template>
     <div class="min-h-screen bg-gray-50">
         <side-navigation>
+              <div
+                class="bg-[#ffffff] flex flex-col gap-2.5 items-start justify-start self-stretch flex-1 relative overflow-hidden">
+                <div
+                    class="bg-[#fbfbfb] p-2.5 flex flex-row gap-2.5 items-start justify-start self-stretch shrink-0 h-[55px] relative overflow-hidden">
+                </div>
+                <div
+                    class="bg-[#ffffff] p-2.5 flex flex-col gap-3 items-start justify-start self-stretch flex-1 relative overflow-hidden">
             <!-- Main content container with max width -->
             <div class="flex flex-col gap-6 items-start justify-start flex-1 relative max-w-none w-full">
                 <!-- Form Section -->
                 <div class="flex flex-col gap-6 items-start justify-start self-stretch shrink-0 relative">
                     <div class="flex flex-col gap-6 items-start justify-start self-stretch shrink-0 relative">
                         <form @submit.prevent="generateWebsiteQRCode" class="w-full ">
-                            <div class="bg-white rounded p-2 flex flex-col gap-4 items-start justify-start flex-1 relative shadow-sm">
+                            <div class="bg-white rounded border-solid border-[#e2e8f0] border p-2 flex flex-col gap-4 items-start justify-start flex-1 relative ">
                                 <div class="flex flex-col gap-3 items-start justify-start self-stretch shrink-0 relative">
                                     <div class="text-sm font-medium text-gray-700 mb-2">
                                         Website QR Code - Dynamic Mode
@@ -53,7 +60,7 @@
 
                 <!-- QR Codes List Section - Full Width -->
                 <div class="flex flex-col gap-4 items-start justify-start w-full shrink-0 relative">
-                    <div class="bg-white rounded p-4 flex flex-col gap-4 items-start justify-start w-full relative shadow-sm">
+                    <div class="bg-white rounded border-solid border-[#e2e8f0] border p-4 flex flex-col gap-4 items-start justify-start w-full relative ">
                         <div class="flex flex-row items-center justify-between self-stretch shrink-0 relative">
                             <div class="text-lg font-semibold text-gray-800">
                                 Dynamic Website QR Codes
@@ -155,6 +162,8 @@
                                         Next
                                     </button>
                                 </div>
+                            </div>
+                            </div>
                             </div>
                         </div>
                         
