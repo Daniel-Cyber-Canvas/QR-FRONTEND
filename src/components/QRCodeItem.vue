@@ -14,7 +14,7 @@
               {{ qrItem.analytics.type }}
             </div>
             <div class="text-gray-900 text-left font-['Roboto-Medium',_sans-serif] text-sm leading-5 font-medium relative">
-              QR-{{ qrItem.id }}
+              {{ qrItem.displayName || `QR-${qrItem.id}` }}
             </div>
             <div class="flex flex-row gap-[5px] items-center justify-center shrink-0 relative">
               <div class="text-gray-500 text-left font-['Roboto-Regular',_sans-serif] text-xs leading-5 font-normal relative">
@@ -40,16 +40,16 @@
         </div>
       </div>
       <div class="flex flex-row gap-[5px] items-center justify-end shrink-0 pr-6 relative">
-        <Button text="Analytics" variant="outline" @click="$emit('analytics', qrItem.id)" />
+        <Button text="Analytics" variant="outline" @click="$emit('analytics', qrItem)" />
         <div class="flex flex-row gap-1 items-center justify-center shrink-0 relative">
           <div class="rounded-lg flex flex-row gap-0 items-center justify-center shrink-0 relative p-2">
-            <Icon icon="ph:download-simple" width="24" height="24" @click="$emit('download', qrItem.id)" class="cursor-pointer text-green-500 hover:text-green-700" />
+            <Icon icon="ph:download-simple" width="24" height="24" @click="$emit('download', qrItem)" class="cursor-pointer text-green-500 hover:text-green-700" />
           </div>
           <div class="rounded-lg flex flex-row gap-0 items-center justify-center shrink-0 relative p-2">
-            <Icon icon="iconamoon:edit" width="24" height="24" @click="$emit('edit', qrItem.id)" class="cursor-pointer text-blue-500 hover:text-blue-700" />
+            <Icon icon="iconamoon:edit" width="24" height="24" @click="$emit('edit', qrItem)" class="cursor-pointer text-blue-500 hover:text-blue-700" />
           </div>
           <div class="rounded-lg flex flex-row gap-0 items-center justify-center shrink-0 relative p-2">
-            <Icon icon="mingcute:delete-line" width="24" height="24" @click="$emit('delete', qrItem.id)" class="cursor-pointer text-red-500 hover:text-red-700" />
+            <Icon icon="mingcute:delete-line" width="24" height="24" @click="$emit('delete', qrItem)" class="cursor-pointer text-red-500 hover:text-red-700" />
           </div>
         </div>
       </div>

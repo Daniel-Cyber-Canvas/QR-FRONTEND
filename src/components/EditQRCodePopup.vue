@@ -152,6 +152,72 @@
           </div>
         </div>
 
+        <!-- PDF QR Code Edit Form -->
+        <div v-else-if="isPDFQR" class="flex flex-col gap-4 items-start justify-start self-stretch shrink-0 relative">
+          <div class="text-neutral-800 text-left font-['Roboto-Medium',_sans-serif] text-[15px] font-medium relative self-stretch mb-2">
+            PDF Document Information
+          </div>
+          
+          <!-- Title Field -->
+          <div class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
+            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
+              Document Title
+            </label>
+            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
+              <input 
+                type="text" 
+                v-model="pdfData.title" 
+                placeholder="My PDF Document"
+                class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
+              />
+            </div>
+          </div>
+
+          <!-- Current PDF Info -->
+          <div v-if="currentPDFInfo" class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
+            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
+              Current PDF File
+            </label>
+            <div class="bg-gray-50 rounded border border-gray-200 p-3 flex items-center gap-2 self-stretch">
+              <Icon name="ph:file-pdf" class="w-5 h-5 text-red-500" />
+              <div class="flex-1">
+                <div class="text-sm font-medium text-gray-700">{{ currentPDFInfo.name }}</div>
+                <div class="text-xs text-gray-500">{{ currentPDFInfo.size }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- New PDF File Upload -->
+          <div class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
+            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
+              Replace with New PDF File (Optional)
+            </label>
+            <div class="relative self-stretch">
+              <input 
+                type="file" 
+                accept=".pdf"
+                @change="handlePDFFileSelect"
+                class="bg-white px-3 py-2 rounded border border-gray-300 w-full focus:outline-none focus:ring-1 focus:ring-[#0c768a]"
+              >
+              <div v-if="selectedPDFFile" class="mt-2 p-2 bg-green-50 border border-green-200 rounded flex items-center gap-2">
+                <Icon name="ph:file-pdf" class="w-4 h-4 text-green-600" />
+                <div class="flex-1">
+                  <div class="text-sm font-medium text-green-700">{{ selectedPDFFile.name }}</div>
+                  <div class="text-xs text-green-600">{{ (selectedPDFFile.size / 1024 / 1024).toFixed(2) }} MB</div>
+                </div>
+                <button 
+                  @click="clearSelectedFile" 
+                  class="text-green-600 hover:text-green-800"
+                  type="button"
+                >
+                  <Icon name="ph:x" class="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <p class="text-xs text-gray-500">Maximum file size: 10MB. Leave empty to keep current file.</p>
+          </div>
+        </div>
+
         <!-- Fallback for other QR types -->
         <div v-else class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
           <div class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-[15px] font-normal relative self-stretch">
@@ -191,8 +257,13 @@
 </template>
 
 <script>
+import { Icon } from '@iconify/vue';
+
 export default {
   name: 'EditQRCodePopup',
+  components: {
+    Icon
+  },
   props: {
     qrCode: {
       type: Object,
@@ -211,7 +282,12 @@ export default {
         company: '',
         job: '',
         address: ''
-      }
+      },
+      pdfData: {
+        title: ''
+      },
+      selectedPDFFile: null,
+      currentPDFInfo: null
     };
   },
   computed: {
@@ -225,9 +301,49 @@ export default {
              this.qrCode.originalData?.content?.name ||
              (this.qrCode.originalData?.content?.email && !this.qrCode.originalData?.content?.url);
     },
+    isPDFQR() {
+      console.log('🔍 EditQRCodePopup - Checking if PDF QR for:', this.qrCode);
+      
+      // More comprehensive PDF detection
+      const isPDF = 
+        // Direct content type check
+        this.qrCode.content?.type === 'pdf' || 
+        // Filename indicators
+        this.qrCode.content?.filename || 
+        this.qrCode.content?.file_name ||
+        // File reference ID
+        this.qrCode.content?.file_ref_id ||
+        // Service type
+        this.qrCode.service === 'pdf' ||
+        // URL contains PDF
+        (this.qrCode.redirect_url && this.qrCode.redirect_url.includes('.pdf')) ||
+        // Original data checks
+        (this.qrCode.originalData?.content?.type === 'pdf') ||
+        (this.qrCode.originalData?.content?.filename) ||
+        (this.qrCode.originalData?.content?.file_ref_id) ||
+        // Heuristic: has title and redirect_url but no website/virtual card indicators
+        (this.qrCode.title && 
+         this.qrCode.redirect_url && 
+         !this.qrCode.content?.url && 
+         !this.qrCode.content?.firstName &&
+         !this.qrCode.originalData?.content?.url &&
+         !this.qrCode.originalData?.content?.firstName);
+      
+      console.log('📄 EditQRCodePopup - Is PDF QR:', isPDF);
+      console.log('📄 EditQRCodePopup - QR Code details:', {
+        title: this.qrCode.title,
+        redirect_url: this.qrCode.redirect_url,
+        content: this.qrCode.content,
+        originalData: this.qrCode.originalData,
+        service: this.qrCode.service
+      });
+      
+      return isPDF;
+    },
     qrCodeType() {
       if (this.isVirtualCardQR) return 'Virtual Card';
       if (this.isWebsiteQR) return 'Website';
+      if (this.isPDFQR) return 'PDF';
       return 'QR';
     }
   },
@@ -236,12 +352,14 @@ export default {
       handler(newVal) {
         this.editableUrl = newVal.url;
         this.loadVirtualCardData();
+        this.loadPDFData();
       },
       immediate: true
     }
   },
   mounted() {
     this.loadVirtualCardData();
+    this.loadPDFData();
   },
   methods: {
     loadVirtualCardData() {
@@ -257,6 +375,64 @@ export default {
           job: content.job || content.title || '',
           address: content.address || ''
         };
+      }
+    },
+    loadPDFData() {
+      console.log('📄 EditQRCodePopup - Loading PDF data for:', this.qrCode);
+      
+      if (this.isPDFQR) {
+        // Try to get content from different possible locations
+        const content = this.qrCode.content || this.qrCode.originalData?.content || {};
+        const title = content.title || this.qrCode.title || '';
+        
+        this.pdfData = {
+          title: title
+        };
+        
+        // Set current PDF info for display
+        const fileName = content.filename || content.file_name || title || 'PDF Document';
+        const fileSize = content.file_size ? `${(content.file_size / 1024 / 1024).toFixed(2)} MB` : 'Unknown size';
+        
+        this.currentPDFInfo = {
+          name: fileName,
+          size: fileSize
+        };
+        
+        console.log('📄 EditQRCodePopup - Loaded PDF data:', {
+          pdfData: this.pdfData,
+          currentPDFInfo: this.currentPDFInfo
+        });
+      } else {
+        console.log('📄 EditQRCodePopup - Not a PDF QR, skipping PDF data load');
+      }
+    },
+    handlePDFFileSelect(event) {
+      const file = event.target.files[0];
+      if (file) {
+        // Validate file type
+        if (file.type !== 'application/pdf') {
+          alert('Please select a valid PDF file.');
+          event.target.value = ''; // Clear the input
+          return;
+        }
+        
+        // Validate file size (10MB limit)
+        const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+        if (file.size > maxSize) {
+          alert('PDF file size must be less than 10MB.');
+          event.target.value = ''; // Clear the input
+          return;
+        }
+        
+        this.selectedPDFFile = file;
+      }
+    },
+    clearSelectedFile() {
+      this.selectedPDFFile = null;
+      // Clear the file input
+      const fileInput = this.$el.querySelector('input[type="file"]');
+      if (fileInput) {
+        fileInput.value = '';
       }
     },
     save() {
@@ -279,6 +455,23 @@ export default {
             address: this.virtualCardData.address.trim()
           }
         });
+      } else if (this.isPDFQR) {
+        // For PDF QR codes, emit the PDF data with optional new file
+        const updateData = {
+          ...this.qrCode,
+          title: this.pdfData.title.trim(),
+          content: {
+            ...this.qrCode.originalData.content,
+            title: this.pdfData.title.trim()
+          }
+        };
+        
+        // If a new file was selected, include it
+        if (this.selectedPDFFile) {
+          updateData.newFile = this.selectedPDFFile;
+        }
+        
+        this.$emit('save', updateData);
       } else {
         // For websites and other types, emit the URL
         this.$emit('save', {
