@@ -1,14 +1,26 @@
+
 <template>
-    <div class="bg-gray-50 min-h-screen">
+    <div class="min-h-screen bg-gray-50">
         <side-navigation>
-            <div class="flex flex-col gap-6 items-start justify-start flex-1 relative">
+              <div
+                class="bg-[#ffffff] flex flex-col gap-2.5 items-start justify-start self-stretch flex-1 relative overflow-hidden">
+                <div
+                    class="bg-[#fbfbfb] p-2.5 flex flex-row gap-2.5 items-start justify-start self-stretch shrink-0 h-[55px] relative overflow-hidden">
+                </div>
+                <div
+                    class="bg-[#ffffff] p-2.5 flex flex-col gap-3 items-start justify-start self-stretch flex-1 relative overflow-hidden">
+            <!-- Main content container with max width -->
+            <div class="flex flex-col gap-6 items-start justify-start flex-1 relative max-w-none w-full">
+                <!-- Form Section -->
                 <div class="flex flex-col gap-6 items-start justify-start self-stretch shrink-0 relative">
                     <div class="flex flex-col gap-6 items-start justify-start self-stretch shrink-0 relative">
-                        <div class="text-2xl font-bold text-gray-800">PDF QR Code - Dynamic Mode</div>
                         
                         <form @submit.prevent="generateQRCode" class="pr-[30px] flex flex-row gap-[30px] items-start justify-start self-stretch shrink-0 relative">
-                            <div class="bg-white rounded p-2 flex flex-col gap-4 items-start justify-start flex-1 relative shadow-sm">
+                            <div class="bg-white rounded border-solid border-[#e2e8f0] border p-2 flex flex-col gap-4 items-start justify-start flex-1 relative ">
                                 <div class="flex flex-col gap-3 items-start justify-start self-stretch shrink-0 relative">
+                                     <div class="text-sm font-medium text-gray-700 mb-2">
+                                        PDF QR Code - Dynamic Mode
+                                    </div>
                                     <input-field-vue 
                                         class="w-full" 
                                         label="QR Code Title"
@@ -65,7 +77,7 @@
 
                         <!-- QR Management Section -->
                         <div class="pr-[30px] self-stretch shrink-0 relative">
-                            <div class="bg-white rounded p-6 shadow-sm">
+                            <div class="bg-white rounded border-solid border-[#e2e8f0] border p-6 ">
                                 <div class="flex flex-row items-center justify-between mb-4">
                                     <h3 class="text-lg font-semibold text-gray-800">Your PDF QR Codes</h3>
                                     <button 
@@ -142,6 +154,8 @@
                                     <p class="text-sm text-gray-500">Create your first PDF QR code using the form above</p>
                                 </div>
                             </div>
+                        </div>
+                        </div>
                         </div>
                     </div>
                 </div>
