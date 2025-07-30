@@ -83,15 +83,7 @@
                                 </div>
                             </div>
 
-                            <!-- QR Code Display Section -->
-                            <div class="bg-white rounded p-2 flex flex-col gap-4 items-center justify-start w-[400px] relative shadow-sm">
-                                <div class="text-sm font-medium text-gray-700 mb-2">
-                                    QR Code Preview
-                                </div>
-                                <div class="w-full h-[300px] border-2 border-dashed border-gray-300 rounded flex items-center justify-center">
-                                    <span class="text-gray-500">QR Code will appear here</span>
-                                </div>
-                            </div>
+                            
                         </form>
 
                         <!-- QR Code Modal -->

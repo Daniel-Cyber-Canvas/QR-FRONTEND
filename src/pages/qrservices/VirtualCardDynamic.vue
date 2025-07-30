@@ -52,7 +52,7 @@
                                     <input-field-vue 
                                         class="w-full" 
                                         label="Email Address"
-                                        placeholder="Andrew@aczambia.com" 
+                                        placeholder="JohnDoe@gmail.com" 
                                         v-model="formData.email" 
                                         type="email"
                                         required 
@@ -60,13 +60,13 @@
                                     <div class="flex flex-row gap-3 items-start justify-start self-stretch shrink-0">
                                         <input-field-vue 
                                             class="w-full" 
-                                            label="Company"
+                                            label="Company Name"
                                             placeholder="John Doe's Company" 
                                             v-model="formData.company" 
                                         />
                                         <input-field-vue 
                                             class="w-full" 
-                                            label="Job" 
+                                            label="Role" 
                                             placeholder="CEO"
                                             v-model="formData.job" 
                                         />

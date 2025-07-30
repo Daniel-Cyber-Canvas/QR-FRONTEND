@@ -8,20 +8,75 @@
       </div>
       
       <div class="flex flex-col items-start justify-start self-stretch shrink-0 relative p-4">
-        <!-- Website QR Code Edit Form -->
-        <div v-if="isWebsiteQR" class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
-          <div class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-[15px] font-normal relative self-stretch">
-            Website URL
+
+
+        <!-- PDF QR Code Edit Form (Check first) -->
+        <div v-if="isPDFQR" class="flex flex-col gap-4 items-start justify-start self-stretch shrink-0 relative">
+          <div class="text-neutral-800 text-left font-['Roboto-Medium',_sans-serif] text-[15px] font-medium relative self-stretch mb-2">
+            PDF Document Information
           </div>
-          <div class="flex flex-row gap-1 items-center justify-start self-stretch shrink-0 relative">
-            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start flex-1 relative">
+          
+          <!-- Title Field -->
+          <div class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
+            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
+              QR Code Title
+            </label>
+            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
               <input 
-                type="url" 
-                v-model="editableUrl" 
-                placeholder="Eg. https://www.mywebsite.com/" 
+                type="text" 
+                v-model="pdfData.title" 
+                placeholder="My PDF Document"
                 class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
               />
             </div>
+          </div>
+
+          <!-- Current PDF Info -->
+          <div v-if="currentPDFInfo" class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
+            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
+              Current PDF File
+            </label>
+            <div class="bg-gray-50 rounded border border-gray-200 p-3 flex items-center gap-2 self-stretch">
+              <Icon name="ph:file-pdf" class="w-5 h-5 text-red-500" />
+              <div class="flex-1">
+                <div class="text-sm font-medium text-gray-700">{{ currentPDFInfo.name }}</div>
+                <div class="text-xs text-gray-500">{{ currentPDFInfo.size }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- New PDF File Upload -->
+          <div class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
+            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
+              PDF File
+            </label>
+            <div class="relative self-stretch">
+              <input 
+                type="file" 
+                accept=".pdf"
+                @change="handlePDFFileSelect"
+                class="bg-white px-3 py-2 rounded border border-gray-300 w-full focus:outline-none focus:ring-1 focus:ring-[#0c768a]"
+              >
+              <div v-if="selectedPDFFile" class="mt-2 p-2 bg-green-50 border border-green-200 rounded flex items-center gap-2">
+                <Icon name="ph:file-pdf" class="w-4 h-4 text-green-600" />
+                <div class="flex-1">
+                  <div class="text-sm font-medium text-green-700">{{ selectedPDFFile.name }}</div>
+                  <div class="text-xs text-green-600">{{ (selectedPDFFile.size / 1024 / 1024).toFixed(2) }} MB</div>
+                </div>
+                <button 
+                  @click="clearSelectedFile" 
+                  class="text-green-600 hover:text-green-800"
+                  type="button"
+                >
+                  <Icon name="ph:x" class="w-4 h-4" />
+                </button>
+              </div>
+              <div v-else-if="!selectedPDFFile" class="mt-2 text-sm text-gray-600">
+                <Icon name="ph:file-pdf" class="inline w-4 h-4 mr-1" />
+                Select a new PDF file to replace the current one
+              </div>
+            </div>
+            <p class="text-xs text-gray-500">Maximum file size: 10MB. Leave empty to keep current file.</p>
           </div>
         </div>
 
@@ -152,69 +207,20 @@
           </div>
         </div>
 
-        <!-- PDF QR Code Edit Form -->
-        <div v-else-if="isPDFQR" class="flex flex-col gap-4 items-start justify-start self-stretch shrink-0 relative">
-          <div class="text-neutral-800 text-left font-['Roboto-Medium',_sans-serif] text-[15px] font-medium relative self-stretch mb-2">
-            PDF Document Information
+        <!-- Website QR Code Edit Form -->
+        <div v-else-if="isWebsiteQR" class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
+          <div class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-[15px] font-normal relative self-stretch">
+            Website URL
           </div>
-          
-          <!-- Title Field -->
-          <div class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
-            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
-              Document Title
-            </label>
-            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
+          <div class="flex flex-row gap-1 items-center justify-start self-stretch shrink-0 relative">
+            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start flex-1 relative">
               <input 
-                type="text" 
-                v-model="pdfData.title" 
-                placeholder="My PDF Document"
+                type="url" 
+                v-model="editableUrl" 
+                placeholder="Eg. https://www.mywebsite.com/" 
                 class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
               />
             </div>
-          </div>
-
-          <!-- Current PDF Info -->
-          <div v-if="currentPDFInfo" class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
-            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
-              Current PDF File
-            </label>
-            <div class="bg-gray-50 rounded border border-gray-200 p-3 flex items-center gap-2 self-stretch">
-              <Icon name="ph:file-pdf" class="w-5 h-5 text-red-500" />
-              <div class="flex-1">
-                <div class="text-sm font-medium text-gray-700">{{ currentPDFInfo.name }}</div>
-                <div class="text-xs text-gray-500">{{ currentPDFInfo.size }}</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- New PDF File Upload -->
-          <div class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
-            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
-              Replace with New PDF File (Optional)
-            </label>
-            <div class="relative self-stretch">
-              <input 
-                type="file" 
-                accept=".pdf"
-                @change="handlePDFFileSelect"
-                class="bg-white px-3 py-2 rounded border border-gray-300 w-full focus:outline-none focus:ring-1 focus:ring-[#0c768a]"
-              >
-              <div v-if="selectedPDFFile" class="mt-2 p-2 bg-green-50 border border-green-200 rounded flex items-center gap-2">
-                <Icon name="ph:file-pdf" class="w-4 h-4 text-green-600" />
-                <div class="flex-1">
-                  <div class="text-sm font-medium text-green-700">{{ selectedPDFFile.name }}</div>
-                  <div class="text-xs text-green-600">{{ (selectedPDFFile.size / 1024 / 1024).toFixed(2) }} MB</div>
-                </div>
-                <button 
-                  @click="clearSelectedFile" 
-                  class="text-green-600 hover:text-green-800"
-                  type="button"
-                >
-                  <Icon name="ph:x" class="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-            <p class="text-xs text-gray-500">Maximum file size: 10MB. Leave empty to keep current file.</p>
           </div>
         </div>
 
@@ -291,21 +297,14 @@ export default {
     };
   },
   computed: {
-    isWebsiteQR() {
-      return this.qrCode.analytics?.type === 'Website' || 
-             (this.qrCode.originalData?.content?.url && !this.qrCode.originalData?.content?.firstName);
-    },
-    isVirtualCardQR() {
-      return this.qrCode.analytics?.type === 'Virtual Card' || 
-             this.qrCode.originalData?.content?.firstName ||
-             this.qrCode.originalData?.content?.name ||
-             (this.qrCode.originalData?.content?.email && !this.qrCode.originalData?.content?.url);
-    },
+    // Check PDF first to prevent misclassification
     isPDFQR() {
       console.log('🔍 EditQRCodePopup - Checking if PDF QR for:', this.qrCode);
       
-      // More comprehensive PDF detection
+      // Enhanced PDF detection with more comprehensive checks
       const isPDF = 
+        // Analytics type check
+        this.qrCode.analytics?.type === 'PDF' ||
         // Direct content type check
         this.qrCode.content?.type === 'pdf' || 
         // Filename indicators
@@ -320,30 +319,55 @@ export default {
         // Original data checks
         (this.qrCode.originalData?.content?.type === 'pdf') ||
         (this.qrCode.originalData?.content?.filename) ||
+        (this.qrCode.originalData?.content?.file_name) ||
         (this.qrCode.originalData?.content?.file_ref_id) ||
+        // Check if originalData service is pdf
+        (this.qrCode.originalData?.service === 'pdf') ||
         // Heuristic: has title and redirect_url but no website/virtual card indicators
         (this.qrCode.title && 
          this.qrCode.redirect_url && 
          !this.qrCode.content?.url && 
          !this.qrCode.content?.firstName &&
          !this.qrCode.originalData?.content?.url &&
-         !this.qrCode.originalData?.content?.firstName);
+         !this.qrCode.originalData?.content?.firstName) ||
+        // Check if URL pattern suggests PDF QR (common pattern: /qr/scan/{id})
+        (this.qrCode.redirect_url && this.qrCode.redirect_url.includes('/qr/scan/')) ||
+        // Check if qrCodeValue suggests PDF QR
+        (this.qrCode.qrCodeValue && this.qrCode.qrCodeValue.includes('/qr/scan/'));
       
       console.log('📄 EditQRCodePopup - Is PDF QR:', isPDF);
       console.log('📄 EditQRCodePopup - QR Code details:', {
         title: this.qrCode.title,
         redirect_url: this.qrCode.redirect_url,
+        qrCodeValue: this.qrCode.qrCodeValue,
         content: this.qrCode.content,
         originalData: this.qrCode.originalData,
-        service: this.qrCode.service
+        service: this.qrCode.service,
+        analytics: this.qrCode.analytics
       });
       
       return isPDF;
     },
+    isVirtualCardQR() {
+      // Don't classify as virtual card if it's already identified as PDF
+      if (this.isPDFQR) return false;
+      
+      return this.qrCode.analytics?.type === 'Virtual Card' || 
+             this.qrCode.originalData?.content?.firstName ||
+             this.qrCode.originalData?.content?.name ||
+             (this.qrCode.originalData?.content?.email && !this.qrCode.originalData?.content?.url);
+    },
+    isWebsiteQR() {
+      // Don't classify as website if it's already identified as PDF or Virtual Card
+      if (this.isPDFQR || this.isVirtualCardQR) return false;
+      
+      return this.qrCode.analytics?.type === 'Website' || 
+             (this.qrCode.originalData?.content?.url && !this.qrCode.originalData?.content?.firstName);
+    },
     qrCodeType() {
+      if (this.isPDFQR) return 'PDF';
       if (this.isVirtualCardQR) return 'Virtual Card';
       if (this.isWebsiteQR) return 'Website';
-      if (this.isPDFQR) return 'PDF';
       return 'QR';
     }
   },
@@ -425,6 +449,7 @@ export default {
         }
         
         this.selectedPDFFile = file;
+        console.log('📄 EditQRCodePopup - PDF file selected:', file.name, `${(file.size / 1024 / 1024).toFixed(2)} MB`);
       }
     },
     clearSelectedFile() {
@@ -434,9 +459,19 @@ export default {
       if (fileInput) {
         fileInput.value = '';
       }
+      console.log('📄 EditQRCodePopup - PDF file selection cleared');
     },
     save() {
+      console.log('🔄 EditQRCodePopup - Save method called');
+      console.log('🔄 EditQRCodePopup - QR Code Type Detection:', {
+        isVirtualCardQR: this.isVirtualCardQR,
+        isPDFQR: this.isPDFQR,
+        isWebsiteQR: this.isWebsiteQR,
+        qrCodeType: this.qrCodeType
+      });
+      
       if (this.isVirtualCardQR) {
+        console.log('💳 EditQRCodePopup - Processing Virtual Card save');
         // For virtual cards, emit the virtual card data
         this.$emit('save', {
           ...this.qrCode,
@@ -456,12 +491,16 @@ export default {
           }
         });
       } else if (this.isPDFQR) {
+        console.log('📄 EditQRCodePopup - Processing PDF save');
+        console.log('📄 EditQRCodePopup - PDF Data:', this.pdfData);
+        console.log('📄 EditQRCodePopup - Selected File:', this.selectedPDFFile);
+        
         // For PDF QR codes, emit the PDF data with optional new file
         const updateData = {
           ...this.qrCode,
           title: this.pdfData.title.trim(),
           content: {
-            ...this.qrCode.originalData.content,
+            ...this.qrCode.originalData?.content,
             title: this.pdfData.title.trim()
           }
         };
@@ -469,10 +508,15 @@ export default {
         // If a new file was selected, include it
         if (this.selectedPDFFile) {
           updateData.newFile = this.selectedPDFFile;
+          console.log('📄 EditQRCodePopup - Saving with new PDF file:', this.selectedPDFFile.name);
+        } else {
+          console.log('📄 EditQRCodePopup - Saving without new PDF file (keeping existing)');
         }
         
+        console.log('📄 EditQRCodePopup - Emitting save event with data:', updateData);
         this.$emit('save', updateData);
       } else {
+        console.log('🌐 EditQRCodePopup - Processing Website/Other save');
         // For websites and other types, emit the URL
         this.$emit('save', {
           ...this.qrCode,

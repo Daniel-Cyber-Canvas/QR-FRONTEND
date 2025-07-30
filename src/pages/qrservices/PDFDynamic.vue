@@ -534,38 +534,129 @@ export default {
         async saveEditedQRCode(updatedQRCode) {
             try {
                 console.log('💾 Saving edited PDF QR code:', updatedQRCode);
+                console.log('💾 Original data structure:', updatedQRCode.originalData);
+                console.log('💾 QR Code ID:', updatedQRCode.id);
+                console.log('💾 Has new file?:', !!updatedQRCode.newFile);
+                console.log('💾 New file details:', updatedQRCode.newFile);
                 
-                // For PDF QR codes, we need to handle file uploads differently
-                // The updatedQRCode should contain the new file if changed
-                let payload;
+                let response;
                 
-                if (updatedQRCode.newFile) {
-                    // If a new file was uploaded, use FormData
+                // Check if there's actually a new file to upload
+                if (updatedQRCode.newFile && updatedQRCode.newFile instanceof File) {
+                    // If a new file was uploaded, we need to create a new PDF QR code
+                    // and then update the existing one with the new file reference
+                    console.log('📁 New file detected, uploading new PDF file');
+                    
                     const formData = new FormData();
                     formData.append('file', updatedQRCode.newFile);
-                    formData.append('title', updatedQRCode.title || updatedQRCode.originalData?.content?.title || '');
-                    formData.append('is_dynamic', true);
-                    formData.append('analytics', true);
                     
-                    const response = await axios.put(`/api/qr/${updatedQRCode.id}`, formData, {
+                    // Get the title from the correct location
+                    const title = updatedQRCode.title || 
+                                 updatedQRCode.content?.title || 
+                                 updatedQRCode.originalData?.content?.title || 
+                                 updatedQRCode.originalData?.title || 
+                                 '';
+                    
+                    formData.append('title', title);
+                    formData.append('is_dynamic', 'true');
+                    formData.append('analytics', 'true');
+                    
+                    console.log('📁 FormData contents:', {
+                        file: updatedQRCode.newFile.name,
+                        title: title,
+                        is_dynamic: 'true',
+                        analytics: 'true'
+                    });
+                    
+                    // First, create a new PDF QR code to get the file reference
+                    console.log('📁 Creating new PDF QR code to get file reference');
+                    const createResponse = await axios.post('/api/qr/pdf', formData, {
                         headers: {
                             'Content-Type': 'multipart/form-data'
                         }
                     });
-                } else {
-                    // If only title was changed, use regular JSON payload
-                    payload = {
-                        title: updatedQRCode.title || updatedQRCode.originalData?.content?.title || '',
+                    
+                    console.log('📁 New PDF QR code created:', createResponse.data);
+                    
+                    // Now update the existing QR code with the new file reference
+                    const newQRCode = createResponse.data.qr_code;
+                    const newFileRef = createResponse.data.file_reference;
+                    
+                    const updatePayload = {
+                        type: 'dynamic',
+                        service: 'pdf',
+                        title: title,
                         content: {
-                            ...updatedQRCode.originalData?.content,
-                            title: updatedQRCode.title || updatedQRCode.originalData?.content?.title || ''
-                        }
+                            type: 'pdf',
+                            url: newFileRef.url,
+                            filename: newFileRef.filename,
+                            file_size: newFileRef.size,
+                            file_ref_id: newFileRef.id,
+                            service: 'pdf'
+                        },
+                        analytics: true,
+                        active: true
                     };
                     
-                    const response = await axios.put(`/api/qr/${updatedQRCode.id}`, payload);
+                    console.log('📁 Updating existing QR code with new file reference:', updatePayload);
+                    
+                    response = await axios.put(`/api/qr/${updatedQRCode.id}`, updatePayload, {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    // Delete the temporary QR code we created
+                    console.log('📁 Cleaning up temporary QR code:', newQRCode.id);
+                    try {
+                        await axios.delete(`/api/qr/${newQRCode.id}`);
+                    } catch (cleanupError) {
+                        console.warn('⚠️ Failed to cleanup temporary QR code:', cleanupError);
+                    }
+                    
+                } else {
+                    // If only title was changed, use regular JSON payload with proper structure
+                    console.log('📝 Title-only update, using JSON approach');
+                    
+                    // Get the title from the correct location
+                    const title = updatedQRCode.title || 
+                                 updatedQRCode.content?.title || 
+                                 updatedQRCode.originalData?.content?.title || 
+                                 updatedQRCode.originalData?.title || 
+                                 '';
+                    
+                    // Use the existing content structure but update the title
+                    const existingContent = updatedQRCode.originalData?.content || {};
+                    
+                    const payload = {
+                        type: updatedQRCode.originalData?.type || 'dynamic',
+                        service: 'pdf',
+                        title: title,
+                        content: {
+                            ...existingContent,
+                            title: title,
+                            service: 'pdf'
+                        },
+                        analytics: updatedQRCode.originalData?.analytics !== undefined ? 
+                                  updatedQRCode.originalData.analytics : true,
+                        active: updatedQRCode.originalData?.active !== undefined ? 
+                               updatedQRCode.originalData.active : true
+                    };
+                    
+                    console.log('📝 JSON payload:', payload);
+                    console.log('📝 Making PUT request to:', `/api/qr/${updatedQRCode.id}`);
+                    
+                    response = await axios.put(`/api/qr/${updatedQRCode.id}`, payload, {
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
                 }
                 
-                console.log('✅ PDF QR code updated successfully');
+                console.log('✅ PDF QR code updated successfully:', response.data);
+                
+                // Show success notification
+                alert('PDF QR code updated successfully!');
                 
                 // Close popup and refresh list
                 this.closeEditPopup();
@@ -573,8 +664,30 @@ export default {
                 
             } catch (error) {
                 console.error('❌ Error updating PDF QR code:', error);
-                const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
-                alert(`Failed to update PDF QR code: ${errorMessage}`);
+                console.error('❌ Error response data:', error.response?.data);
+                console.error('❌ Error response status:', error.response?.status);
+                console.error('❌ Error response headers:', error.response?.headers);
+                console.error('❌ Error config:', error.config);
+                console.error('❌ Full error object:', JSON.stringify(error, null, 2));
+                
+                // Try to get more specific error information
+                let errorDetails = 'Unknown error';
+                if (error.response?.data) {
+                    if (typeof error.response.data === 'string') {
+                        errorDetails = error.response.data;
+                    } else if (error.response.data.message) {
+                        errorDetails = error.response.data.message;
+                    } else if (error.response.data.error) {
+                        errorDetails = error.response.data.error;
+                    } else {
+                        errorDetails = JSON.stringify(error.response.data);
+                    }
+                } else if (error.message) {
+                    errorDetails = error.message;
+                }
+                
+                console.error('❌ Processed error details:', errorDetails);
+                alert(`Failed to update PDF QR code: ${errorDetails}\n\nStatus: ${error.response?.status || 'Unknown'}\nCheck console for full details.`);
             }
         },
 
@@ -596,6 +709,9 @@ export default {
                 console.log('🗑️ Deleting PDF QR code:', this.selectedQRItem.id);
                 await axios.delete(`/api/qr/${this.selectedQRItem.id}`);
                 console.log('✅ PDF QR code deleted successfully');
+                
+                // Show success notification
+                alert('PDF QR code deleted successfully!');
                 
                 // Close popup first
                 this.closeDeleteConfirmation();
