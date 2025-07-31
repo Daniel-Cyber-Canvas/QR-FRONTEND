@@ -102,47 +102,59 @@ export default {
         
         async generateBusinessPageQRCode() {
             try {
-                const title = 'BusinessPageQR';
+                const title = this.formData.business_name.trim() || 'BusinessPageQR';
                 
                 const payload = {
-                    type: "business_page",
+                    service: "business",
+                    is_dynamic: true,
                     title: title,
+                    description: this.formData.business_description.trim() || "Optional description",
                     content: {
                         name: this.formData.business_name.trim(),
-                        url: this.formData.business_url.trim(),
-                        description: this.formData.business_description.trim()
+                        description: this.formData.business_description.trim(),
+                        url: this.formData.business_url.trim()
                     },
-                    is_dynamic: true, // Business Page QR codes are always dynamic
                     analytics: this.formData.analytics,
                     active: true
                 };
 
                 const response = await axios.post('/api/qr', payload);
                 
+                console.log('📥 Backend response for business page:', response.data);
+                console.log('📥 Response structure:', JSON.stringify(response.data, null, 2));
+                
                 if (response.data) {
                     let qrContent;
                     
-                    // For dynamic QR codes, use the redirect URL from backend
-                    if (response.data.redirect_url) {
-                        qrContent = response.data.redirect_url;
-                    } else if (response.data.short_url) {
-                        // Construct full URL from short_url identifier
-                        qrContent = `${config.apiBaseUrl}/scan/${response.data.short_url}`;
-                    } else {
-                        qrContent = response.data.qr_code;
-                    }
-                    
-                    // If backend doesn't provide proper URL, create a fallback
-                    if (!qrContent || typeof qrContent === 'object') {
-                        console.warn('Dynamic QR: Backend should return redirect_url or short_url, falling back to business URL');
-                        qrContent = this.formData.business_url.trim();
-                    }
+                    // Check if redirect_url is actually a backend URL (not the business URL)
+                const isBackendRedirectUrl = response.data.redirect_url && 
+                    (response.data.redirect_url.includes(config.apiBaseUrl) || 
+                     response.data.redirect_url.includes('/redirect/') ||
+                     response.data.redirect_url.includes('/scan/'));
+                
+                if (isBackendRedirectUrl) {
+                    console.log('✅ Using backend redirect_url:', response.data.redirect_url);
+                    qrContent = response.data.redirect_url;
+                } else if (response.data.short_url) {
+                    console.log('✅ Constructing redirect URL from short_url:', response.data.short_url);
+                    qrContent = `${config.apiBaseUrl}/redirect/${response.data.short_url}`;
+                } else if (response.data.redirect_url && !isBackendRedirectUrl) {
+                    console.warn('⚠️ redirect_url contains business URL instead of backend URL:', response.data.redirect_url);
+                    console.error('❌ Backend configuration issue - redirect_url should point to backend, not business URL');
+                    alert('Error: Backend configuration issue - redirect_url should be a backend URL for dynamic QR codes');
+                    return;
+                } else {
+                    console.error('❌ Backend did not provide a proper redirect URL for dynamic QR code');
+                    console.error('❌ Response data:', response.data);
+                    alert('Error: Backend configuration issue - dynamic QR code requires a redirect URL');
+                    return;
+                }
                     
                     this.qrCodeContent = qrContent;
                     this.showQRCodeModal = true;
                     
                     // Log for debugging
-                    console.log('Generated Business Page QR:', qrContent);
+                    console.log('✅ Generated Business Page QR with redirect URL:', qrContent);
                 } else {
                     alert('Error generating QR code: No data received');
                 }

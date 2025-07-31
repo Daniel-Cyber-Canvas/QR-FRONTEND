@@ -544,11 +544,10 @@ export default {
             }
         },
 
-        // Event Handlers - Fixed with better error handling
-        handleEdit(qrId) {
-            console.log('🔧 Edit clicked for QR ID:', qrId);
+        // Event Handlers - Fixed to accept qrItem object directly
+        handleEdit(qrItem) {
+            console.log('🔧 Edit clicked for QR Item:', qrItem);
             try {
-                const qrItem = this.qrItems.find(item => item.id === qrId);
                 if (qrItem) {
                     this.selectedQRItem = { ...qrItem }; // Create a copy to avoid reactivity issues
                     this.$nextTick(() => {
@@ -556,7 +555,7 @@ export default {
                     });
                     console.log('📝 Opening edit popup for:', qrItem);
                 } else {
-                    console.error('❌ QR item not found for ID:', qrId);
+                    console.error('❌ QR item not provided');
                     alert('QR code not found. Please refresh the page.');
                 }
             } catch (error) {
@@ -565,16 +564,15 @@ export default {
             }
         },
 
-        handleDownload(qrId) {
-            console.log('📥 Download clicked for QR ID:', qrId);
+        handleDownload(qrItem) {
+            console.log('📥 Download clicked for QR Item:', qrItem);
             try {
-                const qrItem = this.qrItems.find(item => item.id === qrId);
                 if (qrItem) {
                     this.downloadQRContent = qrItem.qrCodeValue || qrItem.url;
                     this.showDownloadModal = true;
                     console.log('📥 Opening download modal for:', qrItem);
                 } else {
-                    console.error('❌ QR item not found for ID:', qrId);
+                    console.error('❌ QR item not provided');
                     alert('QR code not found. Please refresh the page.');
                 }
             } catch (error) {
@@ -588,11 +586,10 @@ export default {
             this.downloadQRContent = '';
         },
 
-        handleDelete(qrId) {
-            console.log('🗑️ Delete clicked for QR ID:', qrId);
+        handleDelete(qrItem) {
+            console.log('🗑️ Delete clicked for QR Item:', qrItem);
             console.log('🗑️ Current QR Items:', this.qrItems.map(item => ({ id: item.id, url: item.url })));
             try {
-                const qrItem = this.qrItems.find(item => item.id === qrId);
                 if (qrItem) {
                     console.log('🗑️ Found QR Item:', qrItem);
                     console.log('🗑️ Original Data:', qrItem.originalData);
@@ -602,8 +599,7 @@ export default {
                     });
                     console.log('🗑️ Opening delete confirmation for:', qrItem);
                 } else {
-                    console.error('❌ QR item not found for ID:', qrId);
-                    console.error('❌ Available IDs:', this.qrItems.map(item => item.id));
+                    console.error('❌ QR item not provided');
                     alert('QR code not found. Please refresh the page.');
                 }
             } catch (error) {
@@ -612,16 +608,15 @@ export default {
             }
         },
 
-        handleAnalytics(qrId) {
-            console.log('📊 Analytics clicked for QR ID:', qrId);
+        handleAnalytics(qrItem) {
+            console.log('📊 Analytics clicked for QR Item:', qrItem);
             try {
-                const qrItem = this.qrItems.find(item => item.id === qrId);
                 if (qrItem) {
                     this.selectedQRItem = qrItem;
                     this.showAnalytics = true;
                     console.log('📊 Opening analytics for:', qrItem);
                 } else {
-                    console.error('QR item not found for analytics:', qrId);
+                    console.error('QR item not provided for analytics');
                     alert('QR code not found');
                 }
             } catch (error) {

@@ -613,11 +613,10 @@ export default {
             }
         },
 
-        // Event Handlers
-        handleEdit(qrId) {
-            console.log('🔧 Edit clicked for Virtual Card QR ID:', qrId);
+        // Event Handlers - Fixed to accept qrItem object directly
+        handleEdit(qrItem) {
+            console.log('🔧 Edit clicked for Virtual Card QR Item:', qrItem);
             try {
-                const qrItem = this.qrItems.find(item => item.id === qrId);
                 if (qrItem) {
                     this.selectedQRItem = { ...qrItem };
                     this.$nextTick(() => {
@@ -625,7 +624,7 @@ export default {
                     });
                     console.log('📝 Opening edit popup for:', qrItem);
                 } else {
-                    console.error('❌ QR item not found for ID:', qrId);
+                    console.error('❌ QR item not provided');
                     alert('QR code not found. Please refresh the page.');
                 }
             } catch (error) {
@@ -634,16 +633,15 @@ export default {
             }
         },
 
-        handleDownload(qrId) {
-            console.log('📥 Download clicked for Virtual Card QR ID:', qrId);
+        handleDownload(qrItem) {
+            console.log('📥 Download clicked for Virtual Card QR Item:', qrItem);
             try {
-                const qrItem = this.qrItems.find(item => item.id === qrId);
                 if (qrItem) {
                     this.downloadQRContent = qrItem.qrCodeValue || qrItem.url;
                     this.showDownloadModal = true;
                     console.log('📥 Opening download modal for:', qrItem);
                 } else {
-                    console.error('❌ QR item not found for ID:', qrId);
+                    console.error('❌ QR item not provided');
                     alert('QR code not found. Please refresh the page.');
                 }
             } catch (error) {
@@ -657,10 +655,9 @@ export default {
             this.downloadQRContent = '';
         },
 
-        handleDelete(qrId) {
-            console.log('🗑️ Delete clicked for Virtual Card QR ID:', qrId);
+        handleDelete(qrItem) {
+            console.log('🗑️ Delete clicked for Virtual Card QR Item:', qrItem);
             try {
-                const qrItem = this.qrItems.find(item => item.id === qrId);
                 if (qrItem) {
                     this.selectedQRItem = { ...qrItem };
                     this.$nextTick(() => {
@@ -668,7 +665,7 @@ export default {
                     });
                     console.log('🗑️ Opening delete confirmation for:', qrItem);
                 } else {
-                    console.error('❌ QR item not found for ID:', qrId);
+                    console.error('❌ QR item not provided');
                     alert('QR code not found. Please refresh the page.');
                 }
             } catch (error) {
@@ -677,16 +674,15 @@ export default {
             }
         },
 
-        handleAnalytics(qrId) {
-            console.log('📊 Analytics clicked for Virtual Card QR ID:', qrId);
+        handleAnalytics(qrItem) {
+            console.log('📊 Analytics clicked for Virtual Card QR Item:', qrItem);
             try {
-                const qrItem = this.qrItems.find(item => item.id === qrId);
                 if (qrItem) {
                     this.selectedQRItem = qrItem;
                     this.showAnalytics = true;
                     console.log('📊 Opening analytics for:', qrItem);
                 } else {
-                    console.error('QR item not found for analytics:', qrId);
+                    console.error('QR item not provided for analytics');
                     alert('QR code not found');
                 }
             } catch (error) {
