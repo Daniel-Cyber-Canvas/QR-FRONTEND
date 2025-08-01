@@ -394,42 +394,24 @@ export default {
             try {
                 console.log('🔍 Starting fetchQRCodes for business pages...');
                 
-                // Try with both filters first
+                // Fetch all QR codes and filter client-side for better pagination
                 let response = await axios.get('/api/qr', {
                     params: {
                         type: 'dynamic',
-                        service: 'business',
-                        page: this.currentPage,
-                        limit: this.itemsPerPage
+                        page: 1,
+                        limit: 100 // Get all items for client-side pagination
                     }
                 });
 
-                console.log('🔍 Fetch response with filters:', response.data);
-
-                // If no results, try with just type=dynamic and filter client-side
-                if (!response.data.data || response.data.data.length === 0) {
-                    console.log('🔄 No results with service filter, trying type=dynamic only...');
-                    
-                    response = await axios.get('/api/qr', {
-                        params: {
-                            type: 'dynamic',
-                            page: 1,
-                            limit: 100 // Get more items to filter client-side
-                        }
-                    });
-
-                    console.log('🔍 Fetch response without service filter:', response.data);
-                }
+                console.log('🔍 Fetch response:', response.data);
 
                 if (response.data && response.data.data) {
                     let qrData = response.data.data;
                     
-                    // Filter for business service if we got all dynamic QRs
-                    if (qrData.length > 0 && !qrData.every(item => item.service === 'business')) {
-                        console.log('🔍 Filtering for business service...');
-                        qrData = qrData.filter(item => item.service === 'business');
-                        console.log('🔍 Filtered business QRs:', qrData.length);
-                    }
+                    // Filter for business service
+                    console.log('🔍 Filtering for business service...');
+                    qrData = qrData.filter(item => item.service === 'business');
+                    console.log('🔍 Filtered business QRs:', qrData.length);
 
                     console.log('📊 Processing', qrData.length, 'business QR codes');
 
@@ -474,7 +456,7 @@ export default {
                             url: url,
                             qrCodeValue: qrCodeValue,
                             type: 'Business Page',
-                            modifiedAt: item.updated_at || item.created_at,
+                            modified: new Date(item.updated_at || item.created_at).toLocaleDateString(),
                             originalData: item,
                             analytics: {
                                 type: 'Business Page',
@@ -508,28 +490,16 @@ export default {
                 let response = await axios.get('/api/qr', {
                     params: {
                         type: 'dynamic',
-                        service: 'business',
-                        page: this.currentPage,
-                        limit: this.itemsPerPage
+                        page: 1,
+                        limit: 100 // Get all items for client-side pagination
                     }
                 });
-
-                if (!response.data.data || response.data.data.length === 0) {
-                    response = await axios.get('/api/qr', {
-                        params: {
-                            type: 'dynamic',
-                            page: 1,
-                            limit: 100
-                        }
-                    });
-                }
 
                 if (response.data && response.data.data) {
                     let qrData = response.data.data;
                     
-                    if (qrData.length > 0 && !qrData.every(item => item.service === 'business')) {
-                        qrData = qrData.filter(item => item.service === 'business');
-                    }
+                    // Filter for business service
+                    qrData = qrData.filter(item => item.service === 'business');
 
                     this.qrItems = qrData.map(item => {
                         let displayName = 'Business Page QR';
@@ -568,7 +538,7 @@ export default {
                             url: url,
                             qrCodeValue: qrCodeValue,
                             type: 'Business Page',
-                            modifiedAt: item.updated_at || item.created_at,
+                            modified: new Date(item.updated_at || item.created_at).toLocaleDateString(),
                             originalData: item,
                             analytics: {
                                 type: 'Business Page',

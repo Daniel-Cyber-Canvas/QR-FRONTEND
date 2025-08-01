@@ -9,8 +9,78 @@
       
       <div class="flex flex-col items-start justify-start self-stretch shrink-0 relative p-4">
 
+        <!-- Image QR Code Edit Form -->
+        <div v-if="isImageQR" class="flex flex-col gap-4 items-start justify-start self-stretch shrink-0 relative">
+          <div class="text-neutral-800 text-left font-['Roboto-Medium',_sans-serif] text-[15px] font-medium relative self-stretch mb-2">
+            Image Information
+          </div>
+          
+          <!-- Title Field -->
+          <div class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
+            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
+              QR Code Title
+            </label>
+            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
+              <input 
+                type="text" 
+                v-model="imageData.title" 
+                placeholder="My Image"
+                class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
+              />
+            </div>
+          </div>
+
+          <!-- Current Image Info -->
+          <div v-if="currentImageInfo" class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
+            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
+              Current Image File
+            </label>
+            <div class="bg-gray-50 rounded border border-gray-200 p-3 flex items-center gap-2 self-stretch">
+              <Icon name="ph:image" class="w-5 h-5 text-blue-500" />
+              <div class="flex-1">
+                <div class="text-sm font-medium text-gray-700">{{ currentImageInfo.name }}</div>
+                <div class="text-xs text-gray-500">{{ currentImageInfo.size }}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- New Image File Upload -->
+          <div class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
+            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
+              Image File
+            </label>
+            <div class="relative self-stretch">
+              <input 
+                type="file" 
+                accept=".jpg,.jpeg,.png,.gif"
+                @change="handleImageFileSelect"
+                class="bg-white px-3 py-2 rounded border border-gray-300 w-full focus:outline-none focus:ring-1 focus:ring-[#0c768a]"
+              >
+              <div v-if="selectedImageFile" class="mt-2 p-2 bg-green-50 border border-green-200 rounded flex items-center gap-2">
+                <Icon name="ph:image" class="w-4 h-4 text-green-600" />
+                <div class="flex-1">
+                  <div class="text-sm font-medium text-green-700">{{ selectedImageFile.name }}</div>
+                  <div class="text-xs text-green-600">{{ (selectedImageFile.size / 1024 / 1024).toFixed(2) }} MB</div>
+                </div>
+                <button 
+                  @click="clearSelectedImageFile" 
+                  class="text-green-600 hover:text-green-800"
+                  type="button"
+                >
+                  <Icon name="ph:x" class="w-4 h-4" />
+                </button>
+              </div>
+              <div v-else-if="!selectedImageFile" class="mt-2 text-sm text-gray-600">
+                <Icon name="ph:image" class="inline w-4 h-4 mr-1" />
+                Select a new image file to replace the current one
+              </div>
+            </div>
+            <p class="text-xs text-gray-500">Supported formats: JPG, JPEG, PNG, GIF. Maximum file size: 5MB. Leave empty to keep current file.</p>
+          </div>
+        </div>
+
         <!-- Business Page QR Code Edit Form -->
-        <div v-if="isBusinessPageQR" class="flex flex-col gap-4 items-start justify-start self-stretch shrink-0 relative">
+        <div v-else-if="isBusinessPageQR" class="flex flex-col gap-4 items-start justify-start self-stretch shrink-0 relative">
           <div class="text-neutral-800 text-left font-['Roboto-Medium',_sans-serif] text-[15px] font-medium relative self-stretch mb-2">
             Business Page Information
           </div>
@@ -326,8 +396,13 @@ export default {
         url: '',
         description: ''
       },
+      imageData: {
+        title: ''
+      },
       selectedPDFFile: null,
-      currentPDFInfo: null
+      currentPDFInfo: null,
+      selectedImageFile: null,
+      currentImageInfo: null
     };
   },
   computed: {
@@ -348,10 +423,35 @@ export default {
       console.log('🏢 EditQRCodePopup - Is Business Page QR:', isBusinessPage);
       return isBusinessPage;
     },
+    // Check Image QR codes
+    isImageQR() {
+      // Don't classify as image if it's already identified as Business Page
+      if (this.isBusinessPageQR) return false;
+      
+      console.log('🖼️ EditQRCodePopup - Checking if Image QR for:', this.qrCode);
+      
+      const isImage = 
+        // Direct type check
+        this.qrCode.type === 'image' ||
+        // Content type check
+        this.qrCode.content?.type === 'image' ||
+        // Analytics type check
+        this.qrCode.analytics?.type === 'Image' ||
+        // Image-specific fields in content
+        (this.qrCode.content?.filename && this.qrCode.content?.file_ref_id) ||
+        (this.qrCode.content?.url && this.qrCode.content?.filename) ||
+        // Original data checks
+        (this.qrCode.originalData?.type === 'image') ||
+        (this.qrCode.originalData?.content?.type === 'image') ||
+        (this.qrCode.originalData?.content?.filename && this.qrCode.originalData?.content?.file_ref_id);
+      
+      console.log('🖼️ EditQRCodePopup - Is Image QR:', isImage);
+      return isImage;
+    },
     // Check PDF first to prevent misclassification
     isPDFQR() {
-      // Don't classify as PDF if it's already identified as Business Page
-      if (this.isBusinessPageQR) return false;
+      // Don't classify as PDF if it's already identified as Business Page or Image
+      if (this.isBusinessPageQR || this.isImageQR) return false;
       
       console.log('🔍 EditQRCodePopup - Checking if PDF QR for:', this.qrCode);
       
@@ -393,8 +493,8 @@ export default {
       return isPDF;
     },
     isVirtualCardQR() {
-      // Don't classify as virtual card if it's already identified as Business Page or PDF
-      if (this.isBusinessPageQR || this.isPDFQR) return false;
+      // Don't classify as virtual card if it's already identified as Business Page, Image, or PDF
+      if (this.isBusinessPageQR || this.isImageQR || this.isPDFQR) return false;
       
       return this.qrCode.analytics?.type === 'Virtual Card' || 
              this.qrCode.originalData?.content?.firstName ||
@@ -402,14 +502,15 @@ export default {
              (this.qrCode.originalData?.content?.email && !this.qrCode.originalData?.content?.url);
     },
     isWebsiteQR() {
-      // Don't classify as website if it's already identified as Business Page, PDF or Virtual Card
-      if (this.isBusinessPageQR || this.isPDFQR || this.isVirtualCardQR) return false;
+      // Don't classify as website if it's already identified as Business Page, Image, PDF or Virtual Card
+      if (this.isBusinessPageQR || this.isImageQR || this.isPDFQR || this.isVirtualCardQR) return false;
       
       return this.qrCode.analytics?.type === 'Website' || 
              (this.qrCode.originalData?.content?.url && !this.qrCode.originalData?.content?.firstName);
     },
     qrCodeType() {
       if (this.isBusinessPageQR) return 'Business Page';
+      if (this.isImageQR) return 'Image';
       if (this.isPDFQR) return 'PDF';
       if (this.isVirtualCardQR) return 'Virtual Card';
       if (this.isWebsiteQR) return 'Website';
@@ -423,6 +524,7 @@ export default {
         this.loadVirtualCardData();
         this.loadPDFData();
         this.loadBusinessPageData();
+        this.loadImageData();
       },
       immediate: true
     }
@@ -431,6 +533,7 @@ export default {
     this.loadVirtualCardData();
     this.loadPDFData();
     this.loadBusinessPageData();
+    this.loadImageData();
   },
   methods: {
     loadBusinessPageData() {
@@ -448,6 +551,34 @@ export default {
         console.log('🏢 EditQRCodePopup - Loaded Business Page data:', this.businessPageData);
       } else {
         console.log('🏢 EditQRCodePopup - Not a Business Page QR, skipping business data load');
+      }
+    },
+    loadImageData() {
+      console.log('🖼️ EditQRCodePopup - Loading Image data for:', this.qrCode);
+      
+      if (this.isImageQR) {
+        const content = this.qrCode.content || this.qrCode.originalData?.content || {};
+        const title = content.title || this.qrCode.title || '';
+        
+        this.imageData = {
+          title: title
+        };
+        
+        // Set current image info for display
+        const fileName = content.filename || content.file_name || title || 'Image File';
+        const fileSize = content.file_size ? `${(content.file_size / 1024 / 1024).toFixed(2)} MB` : 'Unknown size';
+        
+        this.currentImageInfo = {
+          name: fileName,
+          size: fileSize
+        };
+        
+        console.log('🖼️ EditQRCodePopup - Loaded Image data:', {
+          imageData: this.imageData,
+          currentImageInfo: this.currentImageInfo
+        });
+      } else {
+        console.log('🖼️ EditQRCodePopup - Not an Image QR, skipping image data load');
       }
     },
     loadVirtualCardData() {
@@ -494,6 +625,38 @@ export default {
         console.log('📄 EditQRCodePopup - Not a PDF QR, skipping PDF data load');
       }
     },
+    handleImageFileSelect(event) {
+      const file = event.target.files[0];
+      if (file) {
+        // Validate file type
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+        if (!allowedTypes.includes(file.type)) {
+          alert('Please select a valid image file (JPG, JPEG, PNG, GIF).');
+          event.target.value = '';
+          return;
+        }
+        
+        // Validate file size (5MB limit)
+        const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+        if (file.size > maxSize) {
+          alert('Image file size must be less than 5MB.');
+          event.target.value = '';
+          return;
+        }
+        
+        this.selectedImageFile = file;
+        console.log('🖼️ EditQRCodePopup - Image file selected:', file.name, `${(file.size / 1024 / 1024).toFixed(2)} MB`);
+      }
+    },
+    clearSelectedImageFile() {
+      this.selectedImageFile = null;
+      // Clear the file input
+      const fileInput = this.$el.querySelector('input[type="file"][accept*="image"]');
+      if (fileInput) {
+        fileInput.value = '';
+      }
+      console.log('🖼️ EditQRCodePopup - Image file selection cleared');
+    },
     handlePDFFileSelect(event) {
       const file = event.target.files[0];
       if (file) {
@@ -529,6 +692,7 @@ export default {
       console.log('🔄 EditQRCodePopup - Save method called');
       console.log('🔄 EditQRCodePopup - QR Code Type Detection:', {
         isBusinessPageQR: this.isBusinessPageQR,
+        isImageQR: this.isImageQR,
         isVirtualCardQR: this.isVirtualCardQR,
         isPDFQR: this.isPDFQR,
         isWebsiteQR: this.isWebsiteQR,
@@ -546,6 +710,31 @@ export default {
             description: this.businessPageData.description.trim()
           }
         });
+      } else if (this.isImageQR) {
+        console.log('🖼️ EditQRCodePopup - Processing Image save');
+        console.log('🖼️ EditQRCodePopup - Image Data:', this.imageData);
+        console.log('🖼️ EditQRCodePopup - Selected File:', this.selectedImageFile);
+        
+        // For Image QR codes, emit the image data with optional new file
+        const updateData = {
+          ...this.qrCode,
+          title: this.imageData.title.trim(),
+          content: {
+            ...this.qrCode.originalData?.content,
+            title: this.imageData.title.trim()
+          }
+        };
+        
+        // If a new file was selected, include it
+        if (this.selectedImageFile) {
+          updateData.newFile = this.selectedImageFile;
+          console.log('🖼️ EditQRCodePopup - Saving with new image file:', this.selectedImageFile.name);
+        } else {
+          console.log('🖼️ EditQRCodePopup - Saving without new image file (keeping existing)');
+        }
+        
+        console.log('🖼️ EditQRCodePopup - Emitting save event with data:', updateData);
+        this.$emit('save', updateData);
       } else if (this.isVirtualCardQR) {
         console.log('💳 EditQRCodePopup - Processing Virtual Card save');
         // For virtual cards, emit the virtual card data
