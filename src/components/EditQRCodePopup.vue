@@ -9,9 +9,60 @@
       
       <div class="flex flex-col items-start justify-start self-stretch shrink-0 relative p-4">
 
+        <!-- Business Page QR Code Edit Form -->
+        <div v-if="isBusinessPageQR" class="flex flex-col gap-4 items-start justify-start self-stretch shrink-0 relative">
+          <div class="text-neutral-800 text-left font-['Roboto-Medium',_sans-serif] text-[15px] font-medium relative self-stretch mb-2">
+            Business Page Information
+          </div>
+          
+          <!-- Business Name Field -->
+          <div class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
+            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
+              Business Name
+            </label>
+            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
+              <input 
+                type="text" 
+                v-model="businessPageData.name" 
+                placeholder="My Business"
+                class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
+              />
+            </div>
+          </div>
+
+          <!-- Business URL Field -->
+          <div class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
+            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
+              Business Website URL
+            </label>
+            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
+              <input 
+                type="url" 
+                v-model="businessPageData.url" 
+                placeholder="https://www.mybusiness.com"
+                class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
+              />
+            </div>
+          </div>
+
+          <!-- Business Description Field -->
+          <div class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
+            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
+              Business Description
+            </label>
+            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
+              <textarea 
+                v-model="businessPageData.description" 
+                placeholder="Visit our business page"
+                rows="3"
+                class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 border-none outline-none bg-transparent resize-none" 
+              ></textarea>
+            </div>
+          </div>
+        </div>
 
         <!-- PDF QR Code Edit Form (Check first) -->
-        <div v-if="isPDFQR" class="flex flex-col gap-4 items-start justify-start self-stretch shrink-0 relative">
+        <div v-else-if="isPDFQR" class="flex flex-col gap-4 items-start justify-start self-stretch shrink-0 relative">
           <div class="text-neutral-800 text-left font-['Roboto-Medium',_sans-serif] text-[15px] font-medium relative self-stretch mb-2">
             PDF Document Information
           </div>
@@ -200,56 +251,34 @@
               <input 
                 type="text" 
                 v-model="virtualCardData.address" 
-                placeholder="P.O Box 123"
+                placeholder="123 Main Street, City, Country"
                 class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
               />
             </div>
           </div>
         </div>
 
-        <!-- Website QR Code Edit Form -->
-        <div v-else-if="isWebsiteQR" class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
-          <div class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-[15px] font-normal relative self-stretch">
+        <!-- Website QR Code Edit Form (fallback) -->
+        <div v-else class="flex flex-col gap-4 items-start justify-start self-stretch shrink-0 relative">
+          <div class="text-neutral-800 text-left font-['Roboto-Medium',_sans-serif] text-[15px] font-medium relative self-stretch mb-2">
             Website URL
           </div>
-          <div class="flex flex-row gap-1 items-center justify-start self-stretch shrink-0 relative">
-            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start flex-1 relative">
+          
+          <div class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
+            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
+              URL
+            </label>
+            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
               <input 
                 type="url" 
                 v-model="editableUrl" 
-                placeholder="Eg. https://www.mywebsite.com/" 
+                placeholder="https://example.com"
                 class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
               />
             </div>
           </div>
         </div>
 
-        <!-- Fallback for other QR types -->
-        <div v-else class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
-          <div class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-[15px] font-normal relative self-stretch">
-            Content
-          </div>
-          <div class="flex flex-row gap-1 items-center justify-start self-stretch shrink-0 relative">
-            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start flex-1 relative">
-              <input 
-                type="text" 
-                v-model="editableUrl" 
-                placeholder="Enter content..." 
-                class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="pr-3.5 pb-3 pl-3.5 flex flex-row gap-[18px] items-start justify-end self-stretch shrink-0 relative">
-        <div class="flex flex-row gap-0 items-start justify-start shrink-0 relative">
-          <div @click="$emit('close')" class="bg-[#e7eaee] rounded-sm pt-[7px] pr-[38px] pb-[7px] pl-[38px] flex flex-row gap-2.5 items-center justify-center shrink-0 w-[97px] h-[31px] relative overflow-hidden cursor-pointer">
-            <div class="text-[#424242] text-left font-['Roboto-Bold',_sans-serif] text-xs font-bold relative">
-              Close
-            </div>
-          </div>
-        </div>
         <div class="flex flex-row gap-0 items-start justify-start shrink-0 relative">
           <div @click="save" class="bg-[#0c768a] rounded-sm pt-[7px] pr-3 pb-[7px] pl-3 flex flex-row gap-2.5 items-center justify-center shrink-0 w-[97px] h-[31px] relative overflow-hidden cursor-pointer">
             <div class="text-[#ffffff] text-left font-['Roboto-Bold',_sans-serif] text-xs font-bold relative">
@@ -292,13 +321,38 @@ export default {
       pdfData: {
         title: ''
       },
+      businessPageData: {
+        name: '',
+        url: '',
+        description: ''
+      },
       selectedPDFFile: null,
       currentPDFInfo: null
     };
   },
   computed: {
+    // Check Business Page first
+    isBusinessPageQR() {
+      console.log('🏢 EditQRCodePopup - Checking if Business Page QR for:', this.qrCode);
+      
+      const isBusinessPage = 
+        // Analytics type check
+        this.qrCode.analytics?.type === 'Business Page' ||
+        // Service type
+        this.qrCode.service === 'business' ||
+        this.qrCode.originalData?.service === 'business' ||
+        // Content structure check (has name, url, description)
+        (this.qrCode.content?.name && this.qrCode.content?.url) ||
+        (this.qrCode.originalData?.content?.name && this.qrCode.originalData?.content?.url);
+      
+      console.log('🏢 EditQRCodePopup - Is Business Page QR:', isBusinessPage);
+      return isBusinessPage;
+    },
     // Check PDF first to prevent misclassification
     isPDFQR() {
+      // Don't classify as PDF if it's already identified as Business Page
+      if (this.isBusinessPageQR) return false;
+      
       console.log('🔍 EditQRCodePopup - Checking if PDF QR for:', this.qrCode);
       
       // Enhanced PDF detection with more comprehensive checks
@@ -336,21 +390,11 @@ export default {
         (this.qrCode.qrCodeValue && this.qrCode.qrCodeValue.includes('/qr/scan/'));
       
       console.log('📄 EditQRCodePopup - Is PDF QR:', isPDF);
-      console.log('📄 EditQRCodePopup - QR Code details:', {
-        title: this.qrCode.title,
-        redirect_url: this.qrCode.redirect_url,
-        qrCodeValue: this.qrCode.qrCodeValue,
-        content: this.qrCode.content,
-        originalData: this.qrCode.originalData,
-        service: this.qrCode.service,
-        analytics: this.qrCode.analytics
-      });
-      
       return isPDF;
     },
     isVirtualCardQR() {
-      // Don't classify as virtual card if it's already identified as PDF
-      if (this.isPDFQR) return false;
+      // Don't classify as virtual card if it's already identified as Business Page or PDF
+      if (this.isBusinessPageQR || this.isPDFQR) return false;
       
       return this.qrCode.analytics?.type === 'Virtual Card' || 
              this.qrCode.originalData?.content?.firstName ||
@@ -358,13 +402,14 @@ export default {
              (this.qrCode.originalData?.content?.email && !this.qrCode.originalData?.content?.url);
     },
     isWebsiteQR() {
-      // Don't classify as website if it's already identified as PDF or Virtual Card
-      if (this.isPDFQR || this.isVirtualCardQR) return false;
+      // Don't classify as website if it's already identified as Business Page, PDF or Virtual Card
+      if (this.isBusinessPageQR || this.isPDFQR || this.isVirtualCardQR) return false;
       
       return this.qrCode.analytics?.type === 'Website' || 
              (this.qrCode.originalData?.content?.url && !this.qrCode.originalData?.content?.firstName);
     },
     qrCodeType() {
+      if (this.isBusinessPageQR) return 'Business Page';
       if (this.isPDFQR) return 'PDF';
       if (this.isVirtualCardQR) return 'Virtual Card';
       if (this.isWebsiteQR) return 'Website';
@@ -377,6 +422,7 @@ export default {
         this.editableUrl = newVal.url;
         this.loadVirtualCardData();
         this.loadPDFData();
+        this.loadBusinessPageData();
       },
       immediate: true
     }
@@ -384,8 +430,26 @@ export default {
   mounted() {
     this.loadVirtualCardData();
     this.loadPDFData();
+    this.loadBusinessPageData();
   },
   methods: {
+    loadBusinessPageData() {
+      console.log('🏢 EditQRCodePopup - Loading Business Page data for:', this.qrCode);
+      
+      if (this.isBusinessPageQR) {
+        const content = this.qrCode.content || this.qrCode.originalData?.content || {};
+        
+        this.businessPageData = {
+          name: content.name || '',
+          url: content.url || '',
+          description: content.description || ''
+        };
+        
+        console.log('🏢 EditQRCodePopup - Loaded Business Page data:', this.businessPageData);
+      } else {
+        console.log('🏢 EditQRCodePopup - Not a Business Page QR, skipping business data load');
+      }
+    },
     loadVirtualCardData() {
       if (this.isVirtualCardQR && this.qrCode.originalData?.content) {
         const content = this.qrCode.originalData.content;
@@ -464,13 +528,25 @@ export default {
     save() {
       console.log('🔄 EditQRCodePopup - Save method called');
       console.log('🔄 EditQRCodePopup - QR Code Type Detection:', {
+        isBusinessPageQR: this.isBusinessPageQR,
         isVirtualCardQR: this.isVirtualCardQR,
         isPDFQR: this.isPDFQR,
         isWebsiteQR: this.isWebsiteQR,
         qrCodeType: this.qrCodeType
       });
       
-      if (this.isVirtualCardQR) {
+      if (this.isBusinessPageQR) {
+        console.log('🏢 EditQRCodePopup - Processing Business Page save');
+        // For business pages, emit the business page data
+        this.$emit('save', {
+          ...this.qrCode,
+          content: {
+            name: this.businessPageData.name.trim(),
+            url: this.businessPageData.url.trim(),
+            description: this.businessPageData.description.trim()
+          }
+        });
+      } else if (this.isVirtualCardQR) {
         console.log('💳 EditQRCodePopup - Processing Virtual Card save');
         // For virtual cards, emit the virtual card data
         this.$emit('save', {
