@@ -9,6 +9,58 @@
       
       <div class="flex flex-col items-start justify-start self-stretch shrink-0 relative p-4">
 
+        <!-- App QR Code Edit Form -->
+        <div v-if="isAppQR" class="flex flex-col gap-4 items-start justify-start self-stretch shrink-0 relative">
+          <div class="text-neutral-800 text-left font-['Roboto-Medium',_sans-serif] text-[15px] font-medium relative self-stretch mb-2">
+            App Information
+          </div>
+          
+          <!-- App Name Field -->
+          <div class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
+            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
+              App Name
+            </label>
+            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
+              <input 
+                type="text" 
+                v-model="appData.name" 
+                placeholder="MyAwesome App"
+                class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
+              />
+            </div>
+          </div>
+
+          <!-- App Store URL Field -->
+          <div class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
+            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
+              App Store URL
+            </label>
+            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
+              <input 
+                type="url" 
+                v-model="appData.url" 
+                placeholder="https://apps.apple.com/app/myawesome-app/id123456789"
+                class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
+              />
+            </div>
+          </div>
+
+          <!-- App Description Field -->
+          <div class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
+            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
+              Description
+            </label>
+            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
+              <textarea 
+                v-model="appData.description" 
+                placeholder="Download our awesome app from the App Store"
+                rows="3"
+                class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 border-none outline-none bg-transparent resize-none" 
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
         <!-- Image QR Code Edit Form -->
         <div v-if="isImageQR" class="flex flex-col gap-4 items-start justify-start self-stretch shrink-0 relative">
           <div class="text-neutral-800 text-left font-['Roboto-Medium',_sans-serif] text-[15px] font-medium relative self-stretch mb-2">
@@ -36,7 +88,7 @@
               Current Image File
             </label>
             <div class="bg-gray-50 rounded border border-gray-200 p-3 flex items-center gap-2 self-stretch">
-              <Icon name="ph:image" class="w-5 h-5 text-blue-500" />
+              <Icon name="ph:image" class="w-5 h-5 text-red-500" />
               <div class="flex-1">
                 <div class="text-sm font-medium text-gray-700">{{ currentImageInfo.name }}</div>
                 <div class="text-xs text-gray-500">{{ currentImageInfo.size }}</div>
@@ -406,8 +458,36 @@ export default {
     };
   },
   computed: {
-    // Check Business Page first
+    // Check App QR codes first
+    isAppQR() {
+      console.log('📱 EditQRCodePopup - Checking if App QR for:', this.qrCode);
+      
+      const isApp = 
+        // Direct type check for FormQR.vue created apps
+        this.qrCode.type === 'app' ||
+        // Analytics type check
+        this.qrCode.analytics?.type === 'App' ||
+        // Service type check for AppDynamic.vue created apps
+        this.qrCode.service === 'app' ||
+        this.qrCode.originalData?.service === 'app' ||
+        // Check if it's a dynamic QR with app service
+        (this.qrCode.type === 'dynamic' && this.qrCode.service === 'app') ||
+        (this.qrCode.originalData?.type === 'dynamic' && this.qrCode.originalData?.service === 'app') ||
+        // Content structure check (has name, url, description for app)
+        (this.qrCode.content?.name && this.qrCode.content?.url && this.qrCode.content?.description && 
+         !this.qrCode.content?.firstName && !this.qrCode.content?.filename) ||
+        (this.qrCode.originalData?.content?.name && this.qrCode.originalData?.content?.url && 
+         this.qrCode.originalData?.content?.description && !this.qrCode.originalData?.content?.firstName && 
+         !this.qrCode.originalData?.content?.filename);
+      
+      console.log('📱 EditQRCodePopup - Is App QR:', isApp);
+      return isApp;
+    },
+    // Check Business Page second
     isBusinessPageQR() {
+      // Don't classify as business page if it's already identified as App
+      if (this.isAppQR) return false;
+      
       console.log('🏢 EditQRCodePopup - Checking if Business Page QR for:', this.qrCode);
       
       const isBusinessPage = 
@@ -416,17 +496,18 @@ export default {
         // Service type
         this.qrCode.service === 'business' ||
         this.qrCode.originalData?.service === 'business' ||
-        // Content structure check (has name, url, description)
-        (this.qrCode.content?.name && this.qrCode.content?.url) ||
-        (this.qrCode.originalData?.content?.name && this.qrCode.originalData?.content?.url);
+        // Content structure check (has name, url but not description like app)
+        (this.qrCode.content?.name && this.qrCode.content?.url && !this.qrCode.content?.description) ||
+        (this.qrCode.originalData?.content?.name && this.qrCode.originalData?.content?.url && 
+         !this.qrCode.originalData?.content?.description);
       
       console.log('🏢 EditQRCodePopup - Is Business Page QR:', isBusinessPage);
       return isBusinessPage;
     },
     // Check Image QR codes
     isImageQR() {
-      // Don't classify as image if it's already identified as Business Page
-      if (this.isBusinessPageQR) return false;
+      // Don't classify as image if it's already identified as App or Business Page
+      if (this.isAppQR || this.isBusinessPageQR) return false;
       
       console.log('🖼️ EditQRCodePopup - Checking if Image QR for:', this.qrCode);
       
@@ -450,8 +531,8 @@ export default {
     },
     // Check PDF first to prevent misclassification
     isPDFQR() {
-      // Don't classify as PDF if it's already identified as Business Page or Image
-      if (this.isBusinessPageQR || this.isImageQR) return false;
+      // Don't classify as PDF if it's already identified as App, Business Page or Image
+      if (this.isAppQR || this.isBusinessPageQR || this.isImageQR) return false;
       
       console.log('🔍 EditQRCodePopup - Checking if PDF QR for:', this.qrCode);
       
@@ -493,8 +574,8 @@ export default {
       return isPDF;
     },
     isVirtualCardQR() {
-      // Don't classify as virtual card if it's already identified as Business Page, Image, or PDF
-      if (this.isBusinessPageQR || this.isImageQR || this.isPDFQR) return false;
+      // Don't classify as virtual card if it's already identified as App, Business Page, Image, or PDF
+      if (this.isAppQR || this.isBusinessPageQR || this.isImageQR || this.isPDFQR) return false;
       
       return this.qrCode.analytics?.type === 'Virtual Card' || 
              this.qrCode.originalData?.content?.firstName ||
@@ -502,13 +583,14 @@ export default {
              (this.qrCode.originalData?.content?.email && !this.qrCode.originalData?.content?.url);
     },
     isWebsiteQR() {
-      // Don't classify as website if it's already identified as Business Page, Image, PDF or Virtual Card
-      if (this.isBusinessPageQR || this.isImageQR || this.isPDFQR || this.isVirtualCardQR) return false;
+      // Don't classify as website if it's already identified as App, Business Page, Image, PDF or Virtual Card
+      if (this.isAppQR || this.isBusinessPageQR || this.isImageQR || this.isPDFQR || this.isVirtualCardQR) return false;
       
       return this.qrCode.analytics?.type === 'Website' || 
              (this.qrCode.originalData?.content?.url && !this.qrCode.originalData?.content?.firstName);
     },
     qrCodeType() {
+      if (this.isAppQR) return 'App';
       if (this.isBusinessPageQR) return 'Business Page';
       if (this.isImageQR) return 'Image';
       if (this.isPDFQR) return 'PDF';
@@ -525,6 +607,7 @@ export default {
         this.loadPDFData();
         this.loadBusinessPageData();
         this.loadImageData();
+        this.loadAppData();
       },
       immediate: true
     }
@@ -534,8 +617,26 @@ export default {
     this.loadPDFData();
     this.loadBusinessPageData();
     this.loadImageData();
+    this.loadAppData();
   },
   methods: {
+    loadAppData() {
+      console.log('📱 EditQRCodePopup - Loading App data for:', this.qrCode);
+      
+      if (this.isAppQR) {
+        const content = this.qrCode.content || this.qrCode.originalData?.content || {};
+        
+        this.appData = {
+          name: content.name || '',
+          url: content.url || '',
+          description: content.description || ''
+        };
+        
+        console.log('📱 EditQRCodePopup - Loaded App data:', this.appData);
+      } else {
+        console.log('📱 EditQRCodePopup - Not an App QR, skipping app data load');
+      }
+    },
     loadBusinessPageData() {
       console.log('🏢 EditQRCodePopup - Loading Business Page data for:', this.qrCode);
       
@@ -691,6 +792,7 @@ export default {
     save() {
       console.log('🔄 EditQRCodePopup - Save method called');
       console.log('🔄 EditQRCodePopup - QR Code Type Detection:', {
+        isAppQR: this.isAppQR,
         isBusinessPageQR: this.isBusinessPageQR,
         isImageQR: this.isImageQR,
         isVirtualCardQR: this.isVirtualCardQR,
@@ -699,7 +801,18 @@ export default {
         qrCodeType: this.qrCodeType
       });
       
-      if (this.isBusinessPageQR) {
+      if (this.isAppQR) {
+        console.log('📱 EditQRCodePopup - Processing App save');
+        // For app QR codes, emit the app data
+        this.$emit('save', {
+          ...this.qrCode,
+          content: {
+            name: this.appData.name.trim(),
+            url: this.appData.url.trim(),
+            description: this.appData.description.trim()
+          }
+        });
+      } else if (this.isBusinessPageQR) {
         console.log('🏢 EditQRCodePopup - Processing Business Page save');
         // For business pages, emit the business page data
         this.$emit('save', {
