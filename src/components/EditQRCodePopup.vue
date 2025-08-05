@@ -479,7 +479,7 @@ export default {
       if (this.qrCode.analytics?.type === '2D Barcode') return true;
       if (this.qrCode.originalData?.type === 'barcode') return true;
       if (this.qrCode.originalData?.service === 'barcode') return true;
-      
+      //
       // Check for barcode-specific structure: must have 'data' field AND be explicitly barcode
       // Exclude PDF QR codes that might have 'data' fields
       const hasData = this.qrCode.content?.data || this.qrCode.originalData?.content?.data;

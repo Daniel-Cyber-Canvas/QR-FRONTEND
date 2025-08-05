@@ -393,7 +393,7 @@ export default {
                 if (qrData && Array.isArray(qrData)) {
                     // Log all QR codes to see their structure
                     console.log('🔍 All QR codes before filtering:', qrData);
-                    
+                    //
                     // Apply VERY strict client-side filtering for PDF QR codes ONLY
                     this.qrItems = qrData
                         .filter(qr => {

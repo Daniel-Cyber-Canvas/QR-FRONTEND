@@ -300,7 +300,7 @@ export default {
             this.isGenerating = true;
             try {
                 const title = this.formData.barcode_title.trim() || '2DBarcodeQR';
-                
+                //
                 const payload = {
                     title: title,
                     data: this.formData.barcode_data.trim(),
@@ -308,7 +308,7 @@ export default {
                     analytics: this.formData.analytics,
                     service: 'barcode' // Explicitly set service
                 };
-
+//
                 console.log('🚀 Sending 2D barcode payload:', payload);
 
                 const response = await axios.post('/api/qr/barcode', payload);
