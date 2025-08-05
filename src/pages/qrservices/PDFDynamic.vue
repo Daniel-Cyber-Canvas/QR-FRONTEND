@@ -375,11 +375,17 @@ export default {
         },
 
         // QR Management Methods
+        // QR Management Methods
         async fetchQRCodes() {
             this.isLoading = true;
             try {
-                const response = await axios.get('/api/qr');
-                console.log('📥 Fetched QR codes:', response.data);
+                // Add backend filtering for PDF QR codes
+                const response = await axios.get('/api/qr', {
+                    params: {
+                        service: 'pdf'
+                    }
+                });
+                console.log('📥 Fetched PDF QR codes:', response.data);
                 
                 // Handle the new response format with data, filters, and pagination
                 const qrData = response.data?.data || response.data;
@@ -388,22 +394,25 @@ export default {
                     // Log all QR codes to see their structure
                     console.log('🔍 All QR codes before filtering:', qrData);
                     
-                    // Filter for PDF QR codes and transform data
+                    // Apply VERY strict client-side filtering for PDF QR codes ONLY
                     this.qrItems = qrData
                         .filter(qr => {
                             // Log each QR code to understand the structure
                             console.log('🔍 Checking QR code:', qr);
                             
-                            // Check if it's a PDF QR code based on content structure
-                            const isPDF = qr.content?.type === 'pdf' || 
-                                         qr.content?.filename || 
-                                         qr.content?.file_ref_id ||
-                                         (qr.service === 'pdf') ||
-                                         (qr.redirect_url && qr.redirect_url.includes('.pdf')) ||
-                                         (qr.title && qr.redirect_url && !qr.content?.url && !qr.content?.firstName);
+                            // STRICT PDF QR code filtering - must explicitly be PDF
+                            const isPDF = qr.service === 'pdf' ||
+                                         qr.content?.type === 'pdf' ||
+                                         (qr.redirect_url && qr.redirect_url.includes('.pdf'));
                             
-                            console.log(`🔍 QR ${qr.id} is PDF:`, isPDF);
-                            return isPDF;
+                            // EXCLUDE if it's explicitly an image
+                            const isImage = qr.content?.type === 'image' || 
+                                           qr.analytics?.type === 'Image' ||
+                                           qr.type === 'image';
+                            
+                            const finalResult = isPDF && !isImage;
+                            console.log(`🔍 QR ${qr.id} - isPDF: ${isPDF}, isImage: ${isImage}, final: ${finalResult}`);
+                            return finalResult;
                         })
                         .map(qr => {
                             console.log('📄 Processing PDF QR:', qr);
@@ -468,24 +477,37 @@ export default {
 
         async fetchQRCodesSilent() {
             try {
-                const response = await axios.get('/api/qr');
+                // Add backend filtering for PDF QR codes
+                const response = await axios.get('/api/qr', {
+                    params: {
+                        service: 'pdf'
+                    }
+                });
                 
                 // Handle the new response format with data, filters, and pagination
                 const qrData = response.data?.data || response.data;
                 
                 if (qrData && Array.isArray(qrData)) {
+                    // Apply VERY strict client-side filtering for PDF QR codes ONLY
                     this.qrItems = qrData
                         .filter(qr => {
-                            // Check if it's a PDF QR code based on content structure
-                            const isPDF = qr.content?.type === 'pdf' || 
-                                         qr.content?.filename || 
-                                         qr.content?.file_ref_id ||
-                                         (qr.service === 'pdf') ||
-                                         (qr.redirect_url && qr.redirect_url.includes('.pdf')) ||
-                                         (qr.title && qr.redirect_url && !qr.content?.url && !qr.content?.firstName);
-                            return isPDF;
+                            // STRICT PDF QR code filtering - must explicitly be PDF
+                            const isPDF = qr.service === 'pdf' ||
+                                         qr.content?.type === 'pdf' ||
+                                         (qr.redirect_url && qr.redirect_url.includes('.pdf'));
+                            
+                            // EXCLUDE if it's explicitly an image
+                            const isImage = qr.content?.type === 'image' || 
+                                           qr.analytics?.type === 'Image' ||
+                                           qr.type === 'image';
+                            
+                            const finalResult = isPDF && !isImage;
+                            console.log(`🔍 QR ${qr.id} - isPDF: ${isPDF}, isImage: ${isImage}, final: ${finalResult}`);
+                            return finalResult;
                         })
                         .map(qr => {
+                            console.log('📄 Processing PDF QR:', qr);
+                            
                             // For PDF QR codes, the QR code should contain the scan URL, not the direct PDF URL
                             let scanUrl;
                             if (qr.short_url) {
@@ -499,7 +521,7 @@ export default {
                                 scanUrl = `${config.apiBaseUrl}/scan/${qr.id}`;
                             }
                             
-                            // Better display name logic
+                            // Better display name logic - prioritize document title
                             let displayName = 'PDF Document';
                             if (qr.title && qr.title.trim()) {
                                 displayName = qr.title.trim();
@@ -509,9 +531,9 @@ export default {
                                 displayName = qr.content.title;
                             }
                             
-                            return {
+                            const processedItem = {
                                 id: qr.id,
-                                // For QR code display, use the document title as the main content
+                                // For QR code display, use the scan URL
                                 url: displayName, // This will show as the main content URL
                                 qrCodeValue: scanUrl,
                                 downloadQRContent: scanUrl,
@@ -526,6 +548,9 @@ export default {
                                 displayName: `QR-${qr.id}`,
                                 displayDate: qr.created_at || qr.updated_at
                             };
+                            
+                            console.log('📄 Processed PDF item:', processedItem);
+                            return processedItem;
                         });
                 }
             } catch (error) {

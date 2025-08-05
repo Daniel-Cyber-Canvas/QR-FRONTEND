@@ -206,198 +206,151 @@
 
           <!-- Current PDF Info -->
           <div v-if="currentPDFInfo" class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
-            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
-              Current PDF File
-            </label>
-            <div class="bg-gray-50 rounded border border-gray-200 p-3 flex items-center gap-2 self-stretch">
-              <Icon name="ph:file-pdf" class="w-5 h-5 text-red-500" />
-              <div class="flex-1">
-                <div class="text-sm font-medium text-gray-700">{{ currentPDFInfo.name }}</div>
-                <div class="text-xs text-gray-500">{{ currentPDFInfo.size }}</div>
-              </div>
+            <div class="text-[#000000] text-left font-['Roboto-Medium',_sans-serif] text-sm font-medium relative">
+              Current PDF
+            </div>
+            <div class="bg-gray-50 rounded p-3 self-stretch">
+              <div class="text-sm text-gray-600">{{ currentPDFInfo.filename }}</div>
+              <div class="text-xs text-gray-500">{{ currentPDFInfo.size }}</div>
             </div>
           </div>
-
-          <!-- New PDF File Upload -->
+          
+          <!-- New PDF Upload -->
           <div class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
-            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
-              PDF File
-            </label>
-            <div class="relative self-stretch">
-              <input 
-                type="file" 
-                accept=".pdf"
-                @change="handlePDFFileSelect"
-                class="bg-white px-3 py-2 rounded border border-gray-300 w-full focus:outline-none focus:ring-1 focus:ring-[#0c768a]"
-              >
-              <div v-if="selectedPDFFile" class="mt-2 p-2 bg-green-50 border border-green-200 rounded flex items-center gap-2">
-                <Icon name="ph:file-pdf" class="w-4 h-4 text-green-600" />
-                <div class="flex-1">
-                  <div class="text-sm font-medium text-green-700">{{ selectedPDFFile.name }}</div>
-                  <div class="text-xs text-green-600">{{ (selectedPDFFile.size / 1024 / 1024).toFixed(2) }} MB</div>
-                </div>
-                <button 
-                  @click="clearSelectedFile" 
-                  class="text-green-600 hover:text-green-800"
-                  type="button"
-                >
-                  <Icon name="ph:x" class="w-4 h-4" />
-                </button>
-              </div>
-              <div v-else-if="!selectedPDFFile" class="mt-2 text-sm text-gray-600">
-                <Icon name="ph:file-pdf" class="inline w-4 h-4 mr-1" />
-                Select a new PDF file to replace the current one
-              </div>
+            <div class="text-[#000000] text-left font-['Roboto-Medium',_sans-serif] text-sm font-medium relative">
+              Upload New PDF (Optional)
             </div>
-            <p class="text-xs text-gray-500">Maximum file size: 10MB. Leave empty to keep current file.</p>
+            <input 
+              type="file" 
+              accept=".pdf"
+              @change="handlePDFFileSelect"
+              class="bg-[#ffffff] rounded border-solid border-[#d1d5db] border pt-2 pr-3 pb-2 pl-3 flex flex-row gap-2.5 items-center justify-start self-stretch shrink-0 h-10 relative overflow-hidden"
+            />
+            <div v-if="selectedPDFFile" class="text-sm text-green-600">
+              New file selected: {{ selectedPDFFile.name }}
+            </div>
+          </div>
+        </div>
+
+        <!-- 2D Barcode QR Code Edit Form -->
+        <div v-if="isBarcodeQR" class="flex flex-col gap-4 items-start justify-start self-stretch shrink-0 relative">
+          <div class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
+            <div class="text-[#000000] text-left font-['Roboto-Medium',_sans-serif] text-sm font-medium relative">
+              Barcode Title
+            </div>
+            <input 
+              v-model="barcodeData.title" 
+              type="text" 
+              class="bg-[#ffffff] rounded border-solid border-[#d1d5db] border pt-2 pr-3 pb-2 pl-3 flex flex-row gap-2.5 items-center justify-start self-stretch shrink-0 h-10 relative overflow-hidden"
+              placeholder="Enter barcode title"
+            />
+          </div>
+          <div class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
+            <div class="text-[#000000] text-left font-['Roboto-Medium',_sans-serif] text-sm font-medium relative">
+              Barcode Data
+            </div>
+            <textarea 
+              v-model="barcodeData.data" 
+              class="bg-[#ffffff] rounded border-solid border-[#d1d5db] border pt-2 pr-3 pb-2 pl-3 flex flex-row gap-2.5 items-start justify-start self-stretch shrink-0 relative overflow-hidden resize-none"
+              rows="4"
+              placeholder="Enter barcode data"
+            ></textarea>
           </div>
         </div>
 
         <!-- Virtual Card QR Code Edit Form -->
-        <div v-else-if="isVirtualCardQR" class="flex flex-col gap-4 items-start justify-start self-stretch shrink-0 relative">
-          <div class="text-neutral-800 text-left font-['Roboto-Medium',_sans-serif] text-[15px] font-medium relative self-stretch mb-2">
-            Virtual Card Information
+        <div v-if="isVirtualCardQR" class="flex flex-col gap-4 items-start justify-start self-stretch shrink-0 relative">
+          <div class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
+            <div class="text-[#000000] text-left font-['Roboto-Medium',_sans-serif] text-sm font-medium relative">
+              First Name
+            </div>
+            <input 
+              v-model="virtualCardData.firstName" 
+              type="text" 
+              class="bg-[#ffffff] rounded border-solid border-[#d1d5db] border pt-2 pr-3 pb-2 pl-3 flex flex-row gap-2.5 items-center justify-start self-stretch shrink-0 h-10 relative overflow-hidden"
+              placeholder="Enter first name"
+            />
           </div>
-          
-          <!-- Name Fields -->
-          <div class="flex flex-row gap-3 items-start justify-start self-stretch shrink-0 relative">
-            <div class="flex flex-col gap-1 items-start justify-start flex-1 relative">
-              <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
-                First Name
-              </label>
-              <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
-                <input 
-                  type="text" 
-                  v-model="virtualCardData.firstName" 
-                  placeholder="John"
-                  class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
-                />
-              </div>
+          <div class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
+            <div class="text-[#000000] text-left font-['Roboto-Medium',_sans-serif] text-sm font-medium relative">
+              Last Name
             </div>
-            <div class="flex flex-col gap-1 items-start justify-start flex-1 relative">
-              <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
-                Last Name
-              </label>
-              <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
-                <input 
-                  type="text" 
-                  v-model="virtualCardData.lastName" 
-                  placeholder="Doe"
-                  class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
-                />
-              </div>
-            </div>
+            <input 
+              v-model="virtualCardData.lastName" 
+              type="text" 
+              class="bg-[#ffffff] rounded border-solid border-[#d1d5db] border pt-2 pr-3 pb-2 pl-3 flex flex-row gap-2.5 items-center justify-start self-stretch shrink-0 h-10 relative overflow-hidden"
+              placeholder="Enter last name"
+            />
           </div>
-
-          <!-- Phone Fields -->
-          <div class="flex flex-row gap-3 items-start justify-start self-stretch shrink-0 relative">
-            <div class="flex flex-col gap-1 items-start justify-start flex-1 relative">
-              <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
-                Phone
-              </label>
-              <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
-                <input 
-                  type="tel" 
-                  v-model="virtualCardData.phone" 
-                  placeholder="+260 123 456 789"
-                  class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
-                />
-              </div>
+          <div class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
+            <div class="text-[#000000] text-left font-['Roboto-Medium',_sans-serif] text-sm font-medium relative">
+              Phone
             </div>
-            <div class="flex flex-col gap-1 items-start justify-start flex-1 relative">
-              <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
-                Phone2
-              </label>
-              <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
-                <input 
-                  type="tel" 
-                  v-model="virtualCardData.phone2" 
-                  placeholder="+260 123 456 789"
-                  class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
-                />
-              </div>
-            </div>
+            <input 
+              v-model="virtualCardData.phone" 
+              type="tel" 
+              class="bg-[#ffffff] rounded border-solid border-[#d1d5db] border pt-2 pr-3 pb-2 pl-3 flex flex-row gap-2.5 items-center justify-start self-stretch shrink-0 h-10 relative overflow-hidden"
+              placeholder="Enter phone number"
+            />
           </div>
-
-          <!-- Email Field -->
-          <div class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
-            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
-              Email Address
-            </label>
-            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
-              <input 
-                type="email" 
-                v-model="virtualCardData.email" 
-                placeholder="Andrew@aczambia.com"
-                class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
-              />
+          <div class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
+            <div class="text-[#000000] text-left font-['Roboto-Medium',_sans-serif] text-sm font-medium relative">
+              Email
             </div>
+            <input 
+              v-model="virtualCardData.email" 
+              type="email" 
+              class="bg-[#ffffff] rounded border-solid border-[#d1d5db] border pt-2 pr-3 pb-2 pl-3 flex flex-row gap-2.5 items-center justify-start self-stretch shrink-0 h-10 relative overflow-hidden"
+              placeholder="Enter email address"
+            />
           </div>
-
-          <!-- Company and Job Fields -->
-          <div class="flex flex-row gap-3 items-start justify-start self-stretch shrink-0 relative">
-            <div class="flex flex-col gap-1 items-start justify-start flex-1 relative">
-              <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
-                Company
-              </label>
-              <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
-                <input 
-                  type="text" 
-                  v-model="virtualCardData.company" 
-                  placeholder="John Doe's Company"
-                  class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
-                />
-              </div>
+          <div class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
+            <div class="text-[#000000] text-left font-['Roboto-Medium',_sans-serif] text-sm font-medium relative">
+              Company
             </div>
-            <div class="flex flex-col gap-1 items-start justify-start flex-1 relative">
-              <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
-                Job
-              </label>
-              <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
-                <input 
-                  type="text" 
-                  v-model="virtualCardData.job" 
-                  placeholder="CEO"
-                  class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
-                />
-              </div>
-            </div>
+            <input 
+              v-model="virtualCardData.company" 
+              type="text" 
+              class="bg-[#ffffff] rounded border-solid border-[#d1d5db] border pt-2 pr-3 pb-2 pl-3 flex flex-row gap-2.5 items-center justify-start self-stretch shrink-0 h-10 relative overflow-hidden"
+              placeholder="Enter company name"
+            />
           </div>
-
-          <!-- Address Field -->
-          <div class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
-            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
-              Physical Address
-            </label>
-            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
-              <input 
-                type="text" 
-                v-model="virtualCardData.address" 
-                placeholder="123 Main Street, City, Country"
-                class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
-              />
+          <div class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
+            <div class="text-[#000000] text-left font-['Roboto-Medium',_sans-serif] text-sm font-medium relative">
+              Job Title
             </div>
+            <input 
+              v-model="virtualCardData.job" 
+              type="text" 
+              class="bg-[#ffffff] rounded border-solid border-[#d1d5db] border pt-2 pr-3 pb-2 pl-3 flex flex-row gap-2.5 items-center justify-start self-stretch shrink-0 h-10 relative overflow-hidden"
+              placeholder="Enter job title"
+            />
+          </div>
+          <div class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
+            <div class="text-[#000000] text-left font-['Roboto-Medium',_sans-serif] text-sm font-medium relative">
+              Address
+            </div>
+            <input 
+              v-model="virtualCardData.address" 
+              type="text" 
+              class="bg-[#ffffff] rounded border-solid border-[#d1d5db] border pt-2 pr-3 pb-2 pl-3 flex flex-row gap-2.5 items-center justify-start self-stretch shrink-0 h-10 relative overflow-hidden"
+              placeholder="Enter address"
+            />
           </div>
         </div>
 
-        <!-- Website QR Code Edit Form (fallback) -->
-        <div v-else class="flex flex-col gap-4 items-start justify-start self-stretch shrink-0 relative">
-          <div class="text-neutral-800 text-left font-['Roboto-Medium',_sans-serif] text-[15px] font-medium relative self-stretch mb-2">
-            Website URL
-          </div>
-          
-          <div class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
-            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
-              URL
-            </label>
-            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
-              <input 
-                type="url" 
-                v-model="editableUrl" 
-                placeholder="https://example.com"
-                class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
-              />
+        <!-- Website QR Code Edit Form -->
+        <div v-if="isWebsiteQR" class="flex flex-col gap-4 items-start justify-start self-stretch shrink-0 relative">
+          <div class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
+            <div class="text-[#000000] text-left font-['Roboto-Medium',_sans-serif] text-sm font-medium relative">
+              Website URL
             </div>
+            <input 
+              v-model="editableUrl" 
+              type="url" 
+              class="bg-[#ffffff] rounded border-solid border-[#d1d5db] border pt-2 pr-3 pb-2 pl-3 flex flex-row gap-2.5 items-center justify-start self-stretch shrink-0 h-10 relative overflow-hidden"
+              placeholder="Enter website URL"
+            />
           </div>
         </div>
 
@@ -450,6 +403,15 @@ export default {
       },
       imageData: {
         title: ''
+      },
+      appData: {
+        name: '',
+        url: '',
+        description: ''
+      },
+      barcodeData: {
+        title: '',
+        data: ''
       },
       selectedPDFFile: null,
       currentPDFInfo: null,
@@ -504,78 +466,117 @@ export default {
       console.log('🏢 EditQRCodePopup - Is Business Page QR:', isBusinessPage);
       return isBusinessPage;
     },
-    // Check Image QR codes
-    isImageQR() {
-      // Don't classify as image if it's already identified as App or Business Page
+    // Check 2D Barcode QR codes
+    isBarcodeQR() {
+      // Don't classify as barcode if it's already identified as App or Business Page
       if (this.isAppQR || this.isBusinessPageQR) return false;
+      
+      console.log('📊 EditQRCodePopup - Checking if Barcode QR for:', this.qrCode);
+      
+      // Check for explicit barcode service
+      if (this.qrCode.service === 'barcode') return true;
+      if (this.qrCode.content?.service === 'barcode') return true;
+      if (this.qrCode.analytics?.type === '2D Barcode') return true;
+      if (this.qrCode.originalData?.type === 'barcode') return true;
+      if (this.qrCode.originalData?.service === 'barcode') return true;
+      
+      // Check for barcode-specific structure: must have 'data' field AND be explicitly barcode
+      // Exclude PDF QR codes that might have 'data' fields
+      const hasData = this.qrCode.content?.data || this.qrCode.originalData?.content?.data;
+      const isPDFService = this.qrCode.service === 'pdf' || 
+                      this.qrCode.content?.service === 'pdf' ||
+                      this.qrCode.originalData?.content?.service === 'pdf' ||
+                      this.qrCode.content?.type === 'pdf' ||
+                      this.qrCode.originalData?.content?.type === 'pdf' ||
+                      this.qrCode.content?.filename ||
+                      this.qrCode.originalData?.content?.filename ||
+                      this.qrCode.content?.file_ref_id ||
+                      this.qrCode.originalData?.content?.file_ref_id;
+      
+      // Only consider it a barcode if it has data field AND is not a PDF
+      const isBarcode = hasData && !isPDFService;
+      
+      console.log('📊 EditQRCodePopup - Is Barcode QR:', isBarcode);
+      return isBarcode;
+    },
+    // Check Image QR codes - MUST be checked AFTER PDF to prevent conflicts
+    isImageQR() {
+      // Don't classify as image if it's already identified as App, Business Page, or Barcode
+      if (this.isAppQR || this.isBusinessPageQR || this.isBarcodeQR) return false;
       
       console.log('🖼️ EditQRCodePopup - Checking if Image QR for:', this.qrCode);
       
       const isImage = 
         // Direct type check
         this.qrCode.type === 'image' ||
-        // Content type check
+        // Content type check - EXPLICIT image type
         this.qrCode.content?.type === 'image' ||
         // Analytics type check
         this.qrCode.analytics?.type === 'Image' ||
-        // Image-specific fields in content
-        (this.qrCode.content?.filename && this.qrCode.content?.file_ref_id) ||
-        (this.qrCode.content?.url && this.qrCode.content?.filename) ||
-        // Original data checks
+        // Original data checks - EXPLICIT image type
         (this.qrCode.originalData?.type === 'image') ||
-        (this.qrCode.originalData?.content?.type === 'image') ||
-        (this.qrCode.originalData?.content?.filename && this.qrCode.originalData?.content?.file_ref_id);
+        (this.qrCode.originalData?.content?.type === 'image');
       
-      console.log('🖼️ EditQRCodePopup - Is Image QR:', isImage);
-      return isImage;
+      // EXCLUDE if it's explicitly a PDF or Barcode
+      const isPDF = this.qrCode.service === 'pdf' ||
+                   this.qrCode.content?.type === 'pdf' ||
+                   this.qrCode.analytics?.type === 'PDF' ||
+                   this.qrCode.originalData?.service === 'pdf' ||
+                   this.qrCode.originalData?.content?.type === 'pdf' ||
+                   (this.qrCode.redirect_url && this.qrCode.redirect_url.includes('.pdf'));
+      
+      const isBarcode = this.qrCode.service === 'barcode' ||
+                       this.qrCode.analytics?.type === '2D Barcode' ||
+                       this.qrCode.originalData?.service === 'barcode';
+      
+      const finalResult = isImage && !isPDF && !isBarcode;
+      console.log('🖼️ EditQRCodePopup - Is Image QR:', finalResult, '(isImage:', isImage, ', isPDF:', isPDF, ', isBarcode:', isBarcode, ')');
+      return finalResult;
     },
-    // Check PDF first to prevent misclassification
+    // Check PDF - now with explicit exclusion of images and barcodes
     isPDFQR() {
-      // Don't classify as PDF if it's already identified as App, Business Page or Image
-      if (this.isAppQR || this.isBusinessPageQR || this.isImageQR) return false;
+      // Don't classify as PDF if it's already identified as App, Business Page, Barcode, or Image
+      if (this.isAppQR || this.isBusinessPageQR || this.isBarcodeQR || this.isImageQR) return false;
       
       console.log('🔍 EditQRCodePopup - Checking if PDF QR for:', this.qrCode);
       
-      // Enhanced PDF detection with more comprehensive checks
+      // STRICT PDF detection - must be explicitly PDF
       const isPDF = 
-        // Analytics type check
+        // Analytics type check (most reliable)
         this.qrCode.analytics?.type === 'PDF' ||
         // Direct content type check
         this.qrCode.content?.type === 'pdf' || 
-        // Filename indicators
-        this.qrCode.content?.filename || 
-        this.qrCode.content?.file_name ||
-        // File reference ID
-        this.qrCode.content?.file_ref_id ||
-        // Service type
+        // Service type (reliable indicator)
         this.qrCode.service === 'pdf' ||
-        // URL contains PDF
+        // URL contains PDF extension
         (this.qrCode.redirect_url && this.qrCode.redirect_url.includes('.pdf')) ||
-        // Original data checks
+        // Original data checks - same reliable indicators
         (this.qrCode.originalData?.content?.type === 'pdf') ||
-        (this.qrCode.originalData?.content?.filename) ||
-        (this.qrCode.originalData?.content?.file_name) ||
-        (this.qrCode.originalData?.content?.file_ref_id) ||
-        // Check if originalData service is pdf
-        (this.qrCode.originalData?.service === 'pdf') ||
-        // Heuristic: has title and redirect_url but no website/virtual card indicators
-        (this.qrCode.title && 
-         this.qrCode.redirect_url && 
-         !this.qrCode.content?.url && 
-         !this.qrCode.content?.firstName &&
-         !this.qrCode.originalData?.content?.url &&
-         !this.qrCode.originalData?.content?.firstName) ||
-        // Check if URL pattern suggests PDF QR (common pattern: /qr/scan/{id})
-        (this.qrCode.redirect_url && this.qrCode.redirect_url.includes('/qr/scan/')) ||
-        // Check if qrCodeValue suggests PDF QR
-        (this.qrCode.qrCodeValue && this.qrCode.qrCodeValue.includes('/qr/scan/'));
+        (this.qrCode.originalData?.service === 'pdf');
       
-      console.log('📄 EditQRCodePopup - Is PDF QR:', isPDF);
-      return isPDF;
+      // EXCLUDE if it's explicitly an image or barcode
+      const isImage = this.qrCode.content?.type === 'image' ||
+                     this.qrCode.analytics?.type === 'Image' ||
+                     this.qrCode.type === 'image' ||
+                     this.qrCode.originalData?.content?.type === 'image' ||
+                     this.qrCode.originalData?.type === 'image';
+      
+      const isBarcode = this.qrCode.service === 'barcode' ||
+                       this.qrCode.analytics?.type === '2D Barcode' ||
+                       this.qrCode.originalData?.service === 'barcode' ||
+                       // Check for barcode data fields
+                       (this.qrCode.content?.data !== undefined) ||
+                       (this.qrCode.content?.barcode_data !== undefined) ||
+                       (this.qrCode.originalData?.content?.data !== undefined) ||
+                       (this.qrCode.originalData?.content?.barcode_data !== undefined);
+      
+      const finalResult = isPDF && !isImage && !isBarcode;
+      console.log('📄 EditQRCodePopup - Is PDF QR:', finalResult, '(isPDF:', isPDF, ', isImage:', isImage, ', isBarcode:', isBarcode, ')');
+      return finalResult;
     },
     isVirtualCardQR() {
-      // Don't classify as virtual card if it's already identified as App, Business Page, Image, or PDF
-      if (this.isAppQR || this.isBusinessPageQR || this.isImageQR || this.isPDFQR) return false;
+      // Don't classify as virtual card if it's already identified as App, Business Page, Barcode, Image, or PDF
+      if (this.isAppQR || this.isBusinessPageQR || this.isBarcodeQR || this.isImageQR || this.isPDFQR) return false;
       
       return this.qrCode.analytics?.type === 'Virtual Card' || 
              this.qrCode.originalData?.content?.firstName ||
@@ -583,8 +584,8 @@ export default {
              (this.qrCode.originalData?.content?.email && !this.qrCode.originalData?.content?.url);
     },
     isWebsiteQR() {
-      // Don't classify as website if it's already identified as App, Business Page, Image, PDF or Virtual Card
-      if (this.isAppQR || this.isBusinessPageQR || this.isImageQR || this.isPDFQR || this.isVirtualCardQR) return false;
+      // Don't classify as website if it's already identified as App, Business Page, Barcode, Image, PDF or Virtual Card
+      if (this.isAppQR || this.isBusinessPageQR || this.isBarcodeQR || this.isImageQR || this.isPDFQR || this.isVirtualCardQR) return false;
       
       return this.qrCode.analytics?.type === 'Website' || 
              (this.qrCode.originalData?.content?.url && !this.qrCode.originalData?.content?.firstName);
@@ -592,6 +593,7 @@ export default {
     qrCodeType() {
       if (this.isAppQR) return 'App';
       if (this.isBusinessPageQR) return 'Business Page';
+      if (this.isBarcodeQR) return '2D Barcode';
       if (this.isImageQR) return 'Image';
       if (this.isPDFQR) return 'PDF';
       if (this.isVirtualCardQR) return 'Virtual Card';
@@ -608,6 +610,7 @@ export default {
         this.loadBusinessPageData();
         this.loadImageData();
         this.loadAppData();
+        this.loadBarcodeData();
       },
       immediate: true
     }
@@ -618,46 +621,52 @@ export default {
     this.loadBusinessPageData();
     this.loadImageData();
     this.loadAppData();
+    this.loadBarcodeData();
   },
   methods: {
     loadAppData() {
-      console.log('📱 EditQRCodePopup - Loading App data for:', this.qrCode);
-      
-      if (this.isAppQR) {
-        const content = this.qrCode.content || this.qrCode.originalData?.content || {};
-        
-        this.appData = {
-          name: content.name || '',
-          url: content.url || '',
-          description: content.description || ''
-        };
-        
-        console.log('📱 EditQRCodePopup - Loaded App data:', this.appData);
-      } else {
-        console.log('📱 EditQRCodePopup - Not an App QR, skipping app data load');
+      if (this.qrCode.originalData?.content) {
+        const content = this.qrCode.originalData.content;
+        if (typeof content === 'string') {
+          try {
+            const parsedContent = JSON.parse(content);
+            this.appData.name = parsedContent.name || '';
+            this.appData.url = parsedContent.url || '';
+            this.appData.description = parsedContent.description || '';
+          } catch (e) {
+            console.warn('Failed to parse app content:', e);
+          }
+        } else if (typeof content === 'object') {
+          this.appData.name = content.name || '';
+          this.appData.url = content.url || '';
+          this.appData.description = content.description || '';
+        }
       }
     },
+
     loadBusinessPageData() {
-      console.log('🏢 EditQRCodePopup - Loading Business Page data for:', this.qrCode);
-      
-      if (this.isBusinessPageQR) {
-        const content = this.qrCode.content || this.qrCode.originalData?.content || {};
-        
-        this.businessPageData = {
-          name: content.name || '',
-          url: content.url || '',
-          description: content.description || ''
-        };
-        
-        console.log('🏢 EditQRCodePopup - Loaded Business Page data:', this.businessPageData);
-      } else {
-        console.log('🏢 EditQRCodePopup - Not a Business Page QR, skipping business data load');
+      if (this.isBusinessPageQR && this.qrCode.originalData?.content) {
+        const content = this.qrCode.originalData.content;
+        if (typeof content === 'string') {
+          try {
+            const parsedContent = JSON.parse(content);
+            this.businessPageData.name = parsedContent.name || '';
+            this.businessPageData.url = parsedContent.url || '';
+            this.businessPageData.description = parsedContent.description || '';
+          } catch (e) {
+            console.warn('Failed to parse business page content:', e);
+          }
+        } else if (typeof content === 'object') {
+          this.businessPageData.name = content.name || '';
+          this.businessPageData.url = content.url || '';
+          this.businessPageData.description = content.description || '';
+        }
       }
     },
+
     loadImageData() {
-      console.log('🖼️ EditQRCodePopup - Loading Image data for:', this.qrCode);
-      
       if (this.isImageQR) {
+        // Try to get content from different possible locations
         const content = this.qrCode.content || this.qrCode.originalData?.content || {};
         const title = content.title || this.qrCode.title || '';
         
@@ -682,6 +691,30 @@ export default {
         console.log('🖼️ EditQRCodePopup - Not an Image QR, skipping image data load');
       }
     },
+
+    loadBarcodeData() {
+      if (this.qrCode.originalData?.content) {
+        const content = this.qrCode.originalData.content;
+        if (typeof content === 'string') {
+          try {
+            const parsedContent = JSON.parse(content);
+            this.barcodeData.title = parsedContent.title || this.qrCode.originalData.title || '';
+            this.barcodeData.data = parsedContent.data || parsedContent.barcode_data || '';
+          } catch (e) {
+            console.warn('Failed to parse barcode content:', e);
+            this.barcodeData.title = this.qrCode.originalData.title || '';
+            this.barcodeData.data = content;
+          }
+        } else if (typeof content === 'object') {
+          this.barcodeData.title = content.title || this.qrCode.originalData.title || '';
+          this.barcodeData.data = content.data || content.barcode_data || '';
+        }
+      } else {
+        this.barcodeData.title = this.qrCode.originalData?.title || '';
+        this.barcodeData.data = this.qrCode.url || '';
+      }
+    },
+
     loadVirtualCardData() {
       if (this.isVirtualCardQR && this.qrCode.originalData?.content) {
         const content = this.qrCode.originalData.content;
@@ -698,8 +731,6 @@ export default {
       }
     },
     loadPDFData() {
-      console.log('📄 EditQRCodePopup - Loading PDF data for:', this.qrCode);
-      
       if (this.isPDFQR) {
         // Try to get content from different possible locations
         const content = this.qrCode.content || this.qrCode.originalData?.content || {};
@@ -794,6 +825,7 @@ export default {
       console.log('🔄 EditQRCodePopup - QR Code Type Detection:', {
         isAppQR: this.isAppQR,
         isBusinessPageQR: this.isBusinessPageQR,
+        isBarcodeQR: this.isBarcodeQR,
         isImageQR: this.isImageQR,
         isVirtualCardQR: this.isVirtualCardQR,
         isPDFQR: this.isPDFQR,
@@ -821,6 +853,20 @@ export default {
             name: this.businessPageData.name.trim(),
             url: this.businessPageData.url.trim(),
             description: this.businessPageData.description.trim()
+          }
+        });
+      } else if (this.isBarcodeQR) {
+        console.log('📊 EditQRCodePopup - Processing Barcode save');
+        console.log('📊 EditQRCodePopup - Barcode Data:', this.barcodeData);
+        
+        // For barcode QR codes, emit the barcode data
+        this.$emit('save', {
+          ...this.qrCode,
+          title: this.barcodeData.title.trim(),
+          content: {
+            service: 'barcode',
+            title: this.barcodeData.title.trim(),
+            data: this.barcodeData.data.trim()
           }
         });
       } else if (this.isImageQR) {
