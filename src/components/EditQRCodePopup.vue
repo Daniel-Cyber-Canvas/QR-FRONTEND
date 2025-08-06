@@ -721,6 +721,7 @@ export default {
     qrCode: {
       handler(newVal) {
         this.editableUrl = newVal.url;
+        this.loadEventData();
         this.loadVirtualCardData();
         this.loadPDFData();
         this.loadBusinessPageData();
@@ -732,6 +733,7 @@ export default {
     }
   },
   mounted() {
+    this.loadEventData();
     this.loadVirtualCardData();
     this.loadPDFData();
     this.loadBusinessPageData();
@@ -740,6 +742,45 @@ export default {
     this.loadBarcodeData();
   },
   methods: {
+    loadEventData() {
+      if (this.isEventQR && this.qrCode.originalData?.content) {
+        const content = this.qrCode.originalData.content;
+        if (typeof content === 'string') {
+          try {
+            const parsedContent = JSON.parse(content);
+            this.eventData = {
+              name: parsedContent.name || parsedContent.title || '',
+              start_date: parsedContent.start_date || parsedContent.startDate || '',
+              end_date: parsedContent.end_date || parsedContent.endDate || '',
+              location: parsedContent.location || '',
+              description: parsedContent.description || ''
+            };
+          } catch (e) {
+            console.warn('Failed to parse event content:', e);
+            this.eventData = {
+              name: this.qrCode.originalData.title || '',
+              start_date: '',
+              end_date: '',
+              location: '',
+              description: content
+            };
+          }
+        } else if (typeof content === 'object') {
+          this.eventData = {
+            name: content.name || content.title || this.qrCode.originalData.title || '',
+            start_date: content.start_date || content.startDate || '',
+            end_date: content.end_date || content.endDate || '',
+            location: content.location || '',
+            description: content.description || ''
+          };
+        }
+        
+        console.log('📅 EditQRCodePopup - Loaded Event data:', this.eventData);
+      } else {
+        console.log('📅 EditQRCodePopup - Not an Event QR, skipping event data load');
+      }
+    },
+
     loadAppData() {
       if (this.qrCode.originalData?.content) {
         const content = this.qrCode.originalData.content;
@@ -791,12 +832,13 @@ export default {
         };
         
         // Set current image info for display
-        const fileName = content.filename || content.file_name || title || 'Image File';
+        const fileName = content.filename || content.file_name || title || 'Image';
         const fileSize = content.file_size ? `${(content.file_size / 1024 / 1024).toFixed(2)} MB` : 'Unknown size';
         
         this.currentImageInfo = {
-          name: fileName,
-          size: fileSize
+          filename: fileName,
+          size: fileSize,
+          url: this.qrCode.url || '' // Keep the URL for reference but don't display it as main field
         };
         
         console.log('🖼️ EditQRCodePopup - Loaded Image data:', {
@@ -856,12 +898,12 @@ export default {
           title: title
         };
         
-        // Set current PDF info for display
+        // Set current PDF info for display - show actual filename
         const fileName = content.filename || content.file_name || title || 'PDF Document';
         const fileSize = content.file_size ? `${(content.file_size / 1024 / 1024).toFixed(2)} MB` : 'Unknown size';
         
         this.currentPDFInfo = {
-          name: fileName,
+          filename: fileName, // Changed from 'name' to 'filename' to match template
           size: fileSize
         };
         
