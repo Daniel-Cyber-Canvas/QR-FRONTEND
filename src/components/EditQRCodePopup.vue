@@ -383,6 +383,13 @@ export default {
   data() {
     return {
       editableUrl: this.qrCode.url,
+      eventData: {
+        name: '',
+        start_date: '',
+        end_date: '',
+        location: '',
+        description: ''
+      },
       virtualCardData: {
         firstName: '',
         lastName: '',
@@ -420,8 +427,36 @@ export default {
     };
   },
   computed: {
-    // Check App QR codes first
+    // Check Event QR codes first
+    isEventQR() {
+      console.log('📅 EditQRCodePopup - Checking if Event QR for:', this.qrCode);
+      
+      const isEvent = 
+        // Direct type check for Event QR codes
+        this.qrCode.type === 'event' ||
+        // Analytics type check
+        this.qrCode.analytics?.type === 'Event' ||
+        // Service type check for EventDynamic.vue created events
+        this.qrCode.service === 'event' ||
+        this.qrCode.originalData?.service === 'event' ||
+        // Check if it's a dynamic QR with event service
+        (this.qrCode.type === 'dynamic' && this.qrCode.service === 'event') ||
+        (this.qrCode.originalData?.type === 'dynamic' && this.qrCode.originalData?.service === 'event') ||
+        // Content structure check (has name, start_date, end_date, location, description for event)
+        (this.qrCode.content?.name && this.qrCode.content?.start_date && this.qrCode.content?.end_date && 
+         this.qrCode.content?.location && this.qrCode.content?.description) ||
+        (this.qrCode.originalData?.content?.name && this.qrCode.originalData?.content?.start_date && 
+         this.qrCode.originalData?.content?.end_date && this.qrCode.originalData?.content?.location && 
+         this.qrCode.originalData?.content?.description);
+      
+      console.log('📅 EditQRCodePopup - Is Event QR:', isEvent);
+      return isEvent;
+    },
+    // Check App QR codes second
     isAppQR() {
+      // Don't classify as app if it's already identified as Event
+      if (this.isEventQR) return false;
+      
       console.log('📱 EditQRCodePopup - Checking if App QR for:', this.qrCode);
       
       const isApp = 
@@ -445,10 +480,10 @@ export default {
       console.log('📱 EditQRCodePopup - Is App QR:', isApp);
       return isApp;
     },
-    // Check Business Page second
+    // Check Business Page third
     isBusinessPageQR() {
-      // Don't classify as business page if it's already identified as App
-      if (this.isAppQR) return false;
+      // Don't classify as business page if it's already identified as Event or App
+      if (this.isEventQR || this.isAppQR) return false;
       
       console.log('🏢 EditQRCodePopup - Checking if Business Page QR for:', this.qrCode);
       
@@ -468,8 +503,8 @@ export default {
     },
     // Check 2D Barcode QR codes
     isBarcodeQR() {
-      // Don't classify as barcode if it's already identified as App or Business Page
-      if (this.isAppQR || this.isBusinessPageQR) return false;
+      // Don't classify as barcode if it's already identified as Event, App or Business Page
+      if (this.isEventQR || this.isAppQR || this.isBusinessPageQR) return false;
       
       console.log('📊 EditQRCodePopup - Checking if Barcode QR for:', this.qrCode);
       
@@ -501,8 +536,8 @@ export default {
     },
     // Check Image QR codes - MUST be checked AFTER PDF to prevent conflicts
     isImageQR() {
-      // Don't classify as image if it's already identified as App, Business Page, or Barcode
-      if (this.isAppQR || this.isBusinessPageQR || this.isBarcodeQR) return false;
+      // Don't classify as image if it's already identified as Event, App, Business Page, or Barcode
+      if (this.isEventQR || this.isAppQR || this.isBusinessPageQR || this.isBarcodeQR) return false;
       
       console.log('🖼️ EditQRCodePopup - Checking if Image QR for:', this.qrCode);
       
@@ -535,8 +570,8 @@ export default {
     },
     // Check PDF - now with explicit exclusion of images and barcodes
     isPDFQR() {
-      // Don't classify as PDF if it's already identified as App, Business Page, Barcode, or Image
-      if (this.isAppQR || this.isBusinessPageQR || this.isBarcodeQR || this.isImageQR) return false;
+      // Don't classify as PDF if it's already identified as Event, App, Business Page, Barcode, or Image
+      if (this.isEventQR || this.isAppQR || this.isBusinessPageQR || this.isBarcodeQR || this.isImageQR) return false;
       
       console.log('🔍 EditQRCodePopup - Checking if PDF QR for:', this.qrCode);
       
@@ -575,8 +610,8 @@ export default {
       return finalResult;
     },
     isVirtualCardQR() {
-      // Don't classify as virtual card if it's already identified as App, Business Page, Barcode, Image, or PDF
-      if (this.isAppQR || this.isBusinessPageQR || this.isBarcodeQR || this.isImageQR || this.isPDFQR) return false;
+      // Don't classify as virtual card if it's already identified as Event, App, Business Page, Barcode, Image, or PDF
+      if (this.isEventQR || this.isAppQR || this.isBusinessPageQR || this.isBarcodeQR || this.isImageQR || this.isPDFQR) return false;
       
       return this.qrCode.analytics?.type === 'Virtual Card' || 
              this.qrCode.originalData?.content?.firstName ||
@@ -584,13 +619,14 @@ export default {
              (this.qrCode.originalData?.content?.email && !this.qrCode.originalData?.content?.url);
     },
     isWebsiteQR() {
-      // Don't classify as website if it's already identified as App, Business Page, Barcode, Image, PDF or Virtual Card
-      if (this.isAppQR || this.isBusinessPageQR || this.isBarcodeQR || this.isImageQR || this.isPDFQR || this.isVirtualCardQR) return false;
+      // Don't classify as website if it's already identified as Event, App, Business Page, Barcode, Image, PDF or Virtual Card
+      if (this.isEventQR || this.isAppQR || this.isBusinessPageQR || this.isBarcodeQR || this.isImageQR || this.isPDFQR || this.isVirtualCardQR) return false;
       
       return this.qrCode.analytics?.type === 'Website' || 
              (this.qrCode.originalData?.content?.url && !this.qrCode.originalData?.content?.firstName);
     },
     qrCodeType() {
+      if (this.isEventQR) return 'Event';
       if (this.isAppQR) return 'App';
       if (this.isBusinessPageQR) return 'Business Page';
       if (this.isBarcodeQR) return '2D Barcode';
@@ -598,7 +634,7 @@ export default {
       if (this.isPDFQR) return 'PDF';
       if (this.isVirtualCardQR) return 'Virtual Card';
       if (this.isWebsiteQR) return 'Website';
-      return 'QR';
+      return 'Unknown';
     }
   },
   watch: {
