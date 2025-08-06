@@ -9,6 +9,86 @@
       
       <div class="flex flex-col items-start justify-start self-stretch shrink-0 relative p-4">
 
+        <!-- Event QR Code Edit Form -->
+        <div v-if="isEventQR" class="flex flex-col gap-4 items-start justify-start self-stretch shrink-0 relative">
+          <div class="text-neutral-800 text-left font-['Roboto-Medium',_sans-serif] text-[15px] font-medium relative self-stretch mb-2">
+            Event Information
+          </div>
+          
+          <!-- Event Name Field -->
+          <div class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
+            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
+              Event Name
+            </label>
+            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
+              <input 
+                type="text" 
+                v-model="eventData.name" 
+                placeholder="My Event"
+                class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
+              />
+            </div>
+          </div>
+
+          <!-- Start Date Field -->
+          <div class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
+            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
+              Start Date
+            </label>
+            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
+              <input 
+                type="datetime-local" 
+                v-model="eventData.start_date" 
+                class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
+              />
+            </div>
+          </div>
+
+          <!-- End Date Field -->
+          <div class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
+            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
+              End Date
+            </label>
+            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
+              <input 
+                type="datetime-local" 
+                v-model="eventData.end_date" 
+                class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
+              />
+            </div>
+          </div>
+
+          <!-- Location Field -->
+          <div class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
+            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
+              Location
+            </label>
+            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
+              <input 
+                type="text" 
+                v-model="eventData.location" 
+                placeholder="Event Location"
+                class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 h-[19px] border-none outline-none bg-transparent" 
+              />
+            </div>
+          </div>
+
+          <!-- Description Field -->
+          <div class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
+            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
+              Description
+            </label>
+            <div class="rounded border-solid border-neutral-200 border p-2 flex flex-row gap-2 items-center justify-start self-stretch relative">
+              <textarea 
+                v-model="eventData.description" 
+                placeholder="Event description"
+                rows="3"
+                class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal relative flex-1 border-none outline-none bg-transparent resize-none" 
+              ></textarea>
+            </div>
+          </div>
+        </div>
+
         <!-- App QR Code Edit Form -->
         <div v-if="isAppQR" class="flex flex-col gap-4 items-start justify-start self-stretch shrink-0 relative">
           <div class="text-neutral-800 text-left font-['Roboto-Medium',_sans-serif] text-[15px] font-medium relative self-stretch mb-2">
@@ -859,6 +939,7 @@ export default {
     save() {
       console.log('🔄 EditQRCodePopup - Save method called');
       console.log('🔄 EditQRCodePopup - QR Code Type Detection:', {
+        isEventQR: this.isEventQR,
         isAppQR: this.isAppQR,
         isBusinessPageQR: this.isBusinessPageQR,
         isBarcodeQR: this.isBarcodeQR,
@@ -869,7 +950,20 @@ export default {
         qrCodeType: this.qrCodeType
       });
       
-      if (this.isAppQR) {
+      if (this.isEventQR) {
+        console.log('📅 EditQRCodePopup - Processing Event save');
+        // For event QR codes, emit the event data
+        this.$emit('save', {
+          ...this.qrCode,
+          content: {
+            name: this.eventData.name.trim(),
+            start_date: this.eventData.start_date,
+            end_date: this.eventData.end_date,
+            location: this.eventData.location.trim(),
+            description: this.eventData.description.trim()
+          }
+        });
+      } else if (this.isAppQR) {
         console.log('📱 EditQRCodePopup - Processing App save');
         // For app QR codes, emit the app data
         this.$emit('save', {
