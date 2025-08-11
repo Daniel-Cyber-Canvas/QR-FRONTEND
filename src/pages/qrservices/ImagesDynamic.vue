@@ -148,9 +148,17 @@
             @close="closeQRCodeModal" 
         />
 
-        <!-- Edit QR Code Popup -->
+        <!-- Edit Image QR Code Popup (Separate for images) -->
+        <EditImageQRPopup
+            v-if="showEditPopup && selectedQRItem && isSelectedItemImage"
+            :qr-code="selectedQRItem"
+            @close="closeEditPopup"
+            @save="saveEditedQRCode"
+        />
+
+        <!-- Edit QR Code Popup (For non-image QR codes) -->
         <EditQRCodePopup
-            v-if="showEditPopup && selectedQRItem"
+            v-if="showEditPopup && selectedQRItem && !isSelectedItemImage"
             :qr-code="selectedQRItem"
             @close="closeEditPopup"
             @save="saveEditedQRCode"
@@ -190,6 +198,7 @@ import QRCodeModal from '@/components/DownloadQR.vue';
 import DownloadQRModal from '@/components/DownloadQR.vue';
 import QRCodeItem from '@/components/QRCodeItem.vue';
 import EditQRCodePopup from '@/components/EditQRCodePopup.vue';
+import EditImageQRPopup from '@/components/EditImageQRPopup.vue';
 import DeleteConfirmationPopup from '@/components/DeleteConfirmationPopup.vue';
 import AnalyticsPopup from '@/components/AnalyticsPopup.vue';
 import { Icon } from '@iconify/vue';
@@ -205,6 +214,7 @@ export default {
         DownloadQRModal,
         QRCodeItem,
         EditQRCodePopup,
+        EditImageQRPopup,
         DeleteConfirmationPopup,
         AnalyticsPopup,
         Icon
@@ -257,6 +267,17 @@ export default {
             const start = (this.currentPage - 1) * this.itemsPerPage + 1;
             const end = Math.min(this.currentPage * this.itemsPerPage, this.qrItems.length);
             return `Showing ${start}-${end} of ${this.qrItems.length} QR codes`;
+        },
+
+        // Check if selected item is an image QR
+        isSelectedItemImage() {
+            if (!this.selectedQRItem) return false;
+            return this.selectedQRItem.analytics?.type === 'Image' || 
+                   this.selectedQRItem.type === 'Image' ||  // Added this for capital I
+                   this.selectedQRItem.type === 'image' ||
+                   this.selectedQRItem.analytics?.type === 'image' ||
+                   this.selectedQRItem.originalData?.type === 'image' ||  // Additional check for backend type
+                   this.selectedQRItem.originalData?.content?.service === 'image';  // For updated dynamic images
         }
     },
     async mounted() {
@@ -394,7 +415,6 @@ export default {
             try {
                 console.log('🔍 Starting fetchQRCodes for images...');
                 
-                // Get all QR codes first, then filter for image QRs
                 let response = await axios.get('/api/qr', {
                     params: {
                         page: 1,
@@ -418,19 +438,18 @@ export default {
                     const imageQRs = qrData.filter(item => {
                         console.log('🔍 Checking item:', item.id, 'type:', item.type, 'service:', item.service, 'content:', item.content);
                         
-                        // STRICT filtering: Only accept QR codes that are explicitly image QRs
-                        // 1. Must have type="image" (set by backend CreateImageQRCode)
-                        if (item.type !== 'image') {
+                        // Updated filtering: Accept both legacy 'image' type and new 'dynamic' with service 'image'
+                        const isImageType = item.type === 'image' || 
+                                           (item.type === 'dynamic' && item.content?.service === 'image');
+                        
+                        if (!isImageType) {
                             return false;
                         }
                         
-                        // 2. Must have content with type="image" and image-specific fields
+                        // Check for image-specific content fields
                         if (item.content && typeof item.content === 'object') {
-                            const hasImageType = item.content.type === 'image';
                             const hasImageFields = item.content.filename && item.content.file_ref_id;
-                            
-                            // Must have both image type and image-specific fields
-                            return hasImageType && hasImageFields;
+                            return hasImageFields;
                         }
                         
                         return false;
@@ -715,7 +734,8 @@ export default {
                     const newFileRef = createResponse.data.file_reference;
                     
                     const updatePayload = {
-                        type: 'image', // FIXED: Use 'image' instead of 'dynamic' to match filtering logic
+                        type: 'dynamic',
+                        service: 'image',
                         title: title,
                         content: {
                             type: 'image',

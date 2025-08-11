@@ -70,6 +70,12 @@ const router = createRouter({
       name: 'website-dynamic',
       component: () => import('@/pages/qrservices/WebsiteDynamic.vue')
     },
+    // QR Service Routes - Social Media (Dynamic Only)
+    {
+      path: '/qr/socialmedia/dynamic',
+      name: 'socialmedia-dynamic',
+      component: () => import('@/pages/qrservices/SocialMediaDynamic.vue')
+    },
     // QR Service Routes - Text (Static Only)
     {
       path: '/qr/text/static',

@@ -9,22 +9,75 @@
                         <form @submit.prevent="generateQRCode" class="pr-[30px] flex flex-row gap-[30px] items-start justify-start self-stretch shrink-0 relative">
                             <div class="bg-white rounded p-2 flex flex-col gap-4 items-start justify-start flex-1 relative shadow-sm">
                                 <div class="flex flex-col gap-3 items-start justify-start self-stretch shrink-0">
+                                    <!-- Platform Selection -->
+                                    <div class="flex flex-col gap-2 w-full">
+                                        <label class="text-sm font-medium text-gray-700">Social Media Platform</label>
+                                        <select 
+                                            v-model="formData.platform" 
+                                            @change="onPlatformChange"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0c768a] focus:border-transparent"
+                                            required
+                                        >
+                                            <option value="">Select Platform</option>
+                                            <option value="facebook">Facebook</option>
+                                            <option value="instagram">Instagram</option>
+                                            <option value="twitter">Twitter/X</option>
+                                            <option value="linkedin">LinkedIn</option>
+                                            <option value="tiktok">TikTok</option>
+                                            <option value="youtube">YouTube</option>
+                                            <option value="snapchat">Snapchat</option>
+                                            <option value="pinterest">Pinterest</option>
+                                            <option value="reddit">Reddit</option>
+                                            <option value="discord">Discord</option>
+                                            <option value="telegram">Telegram</option>
+                                            <option value="whatsapp">WhatsApp</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Title Field -->
                                     <input-field-vue 
                                         class="w-full" 
-                                        label="Social Media URL"
-                                        placeholder="https://facebook.com/yourpage or https://instagram.com/yourusername" 
-                                        v-model="formData.social_url" 
+                                        label="QR Code Title"
+                                        placeholder="My Facebook Profile" 
+                                        v-model="formData.title" 
+                                        required 
+                                    />
+
+                                    <!-- Description Field -->
+                                    <input-field-vue 
+                                        class="w-full" 
+                                        label="Description"
+                                        placeholder="Follow me on Facebook" 
+                                        v-model="formData.description" 
+                                        required 
+                                    />
+
+                                    <!-- URL Field -->
+                                    <input-field-vue 
+                                        class="w-full" 
+                                        label="Profile URL"
+                                        :placeholder="getUrlPlaceholder()" 
+                                        v-model="formData.url" 
                                         required 
                                         type="url"
                                     />
+
+                                    <!-- Handle/Username Field -->
+                                    <input-field-vue 
+                                        class="w-full" 
+                                        label="Username/Handle"
+                                        :placeholder="getHandlePlaceholder()" 
+                                        v-model="formData.handle" 
+                                        required 
+                                    />
                                     
+                                    <!-- Analytics Option -->
                                     <div class="flex items-center gap-2">
                                         <input 
                                             type="checkbox" 
                                             id="analytics" 
                                             v-model="formData.analytics"
                                             class="w-4 h-4 text-[#0c768a] border-gray-300 rounded focus:ring-[#0c768a]"
-                                            checked
                                         >
                                         <label for="analytics" class="text-sm text-gray-700">Enable Analytics Tracking</label>
                                     </div>
@@ -35,7 +88,10 @@
                                             :disabled="isGenerating"
                                             class="bg-[#0c768a] rounded px-4 py-2 text-white hover:bg-opacity-90 transition-colors duration-300 disabled:opacity-50"
                                         >
-                                            <span v-if="isGenerating">Generating...</span>
+                                            <span v-if="isGenerating" class="flex items-center gap-2">
+                                                <Icon name="ph:spinner" class="w-4 h-4 animate-spin" />
+                                                Generating...
+                                            </span>
                                             <span v-else>Generate Social Media QR Code</span>
                                         </button>
                                     </div>
@@ -50,17 +106,23 @@
                                     <div class="text-lg font-semibold text-gray-800">
                                         Dynamic Social Media QR Codes
                                     </div>
-                                    <div class="text-sm text-gray-600">
-                                        {{ paginationInfo }}
-                                    </div>
+                                    <button 
+                                        @click="fetchQRCodes"
+                                        :disabled="isLoading"
+                                        class="bg-[#0c768a] text-white px-4 py-2 rounded hover:bg-opacity-90 transition-colors duration-300 disabled:opacity-50"
+                                    >
+                                        <span v-if="isLoading" class="flex items-center gap-2">
+                                            <Icon name="ph:spinner" class="w-4 h-4 animate-spin" />
+                                            Loading...
+                                        </span>
+                                        <span v-else>Refresh</span>
+                                    </button>
                                 </div>
 
                                 <!-- Loading State -->
-                                <div v-if="isLoading" class="flex flex-col items-center justify-center py-8 text-gray-500">
-                                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#0c768a] mb-2"></div>
-                                    <div class="text-sm">
-                                        Loading QR codes...
-                                    </div>
+                                <div v-if="isLoading && qrItems.length === 0" class="flex flex-col items-center justify-center py-8 text-gray-500">
+                                    <Icon name="ph:spinner" class="w-8 h-8 animate-spin text-[#0c768a]" />
+                                    <p class="text-gray-600">Loading social media QR codes...</p>
                                 </div>
 
                                 <!-- Empty State -->
@@ -85,27 +147,60 @@
                                         />
                                     </div>
 
-                                    <!-- Pagination -->
-                                    <div v-if="totalPages > 1" class="flex flex-row items-center justify-center gap-2 self-stretch shrink-0 relative mt-4">
-                                        <button
-                                            @click="currentPage = Math.max(1, currentPage - 1)"
-                                            :disabled="currentPage === 1"
-                                            class="px-3 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            Previous
-                                        </button>
+                                    <!-- Pagination Controls -->
+                                    <div v-if="qrItems.length > itemsPerPage" class="flex flex-col gap-3 items-center justify-center w-full mt-4">
+                                        <!-- Pagination Info -->
+                                        <div class="text-gray-600 text-sm">
+                                            {{ paginationInfo }}
+                                        </div>
                                         
-                                        <span class="px-3 py-1 text-sm text-gray-600">
-                                            Page {{ currentPage }} of {{ totalPages }}
-                                        </span>
-                                        
-                                        <button
-                                            @click="currentPage = Math.min(totalPages, currentPage + 1)"
-                                            :disabled="currentPage === totalPages"
-                                            class="px-3 py-1 rounded border border-gray-300 text-gray-600 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                                        >
-                                            Next
-                                        </button>
+                                        <!-- Pagination Buttons -->
+                                        <div class="flex flex-row gap-2 items-center justify-center">
+                                            <!-- Previous Button -->
+                                            <button 
+                                                @click="changePage(currentPage - 1)"
+                                                :disabled="currentPage === 1"
+                                                :class="[
+                                                    'px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                                                    currentPage === 1 
+                                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                                ]"
+                                            >
+                                                Previous
+                                            </button>
+                                            
+                                            <!-- Page Numbers -->
+                                            <template v-for="page in totalPages" :key="page">
+                                                <button 
+                                                    v-if="page <= 5 || Math.abs(page - currentPage) <= 2 || page > totalPages - 2"
+                                                    @click="changePage(page)"
+                                                    :class="[
+                                                        'px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                                                        page === currentPage 
+                                                            ? 'bg-[#0c768a] text-white' 
+                                                            : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                                    ]"
+                                                >
+                                                    {{ page }}
+                                                </button>
+                                                <span v-else-if="page === currentPage - 3 || page === currentPage + 3" class="px-2 text-gray-500">...</span>
+                                            </template>
+                                            
+                                            <!-- Next Button -->
+                                            <button 
+                                                @click="changePage(currentPage + 1)"
+                                                :disabled="currentPage === totalPages"
+                                                :class="[
+                                                    'px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                                                    currentPage === totalPages 
+                                                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                                                        : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                                                ]"
+                                            >
+                                                Next
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -185,7 +280,11 @@ export default {
     data() {
         return {
             formData: {
-                social_url: '',
+                platform: '',
+                title: '',
+                description: '',
+                url: '',
+                handle: '',
                 analytics: true
             },
             showQRCodeModal: false,
@@ -234,6 +333,64 @@ export default {
         await this.fetchQRCodes();
     },
     methods: {
+        // Platform-specific placeholder methods
+        getUrlPlaceholder() {
+            const placeholders = {
+                facebook: 'https://facebook.com/johndoe',
+                instagram: 'https://instagram.com/johndoe',
+                twitter: 'https://twitter.com/johndoe',
+                linkedin: 'https://linkedin.com/in/johndoe',
+                tiktok: 'https://tiktok.com/@johndoe',
+                youtube: 'https://youtube.com/c/johndoe',
+                snapchat: 'https://snapchat.com/add/johndoe',
+                pinterest: 'https://pinterest.com/johndoe',
+                reddit: 'https://reddit.com/u/johndoe',
+                discord: 'https://discord.gg/johndoe',
+                telegram: 'https://t.me/johndoe',
+                whatsapp: 'https://wa.me/1234567890'
+            };
+            return placeholders[this.formData.platform] || 'https://example.com/profile';
+        },
+
+        getHandlePlaceholder() {
+            const placeholders = {
+                facebook: 'johndoe',
+                instagram: 'johndoe',
+                twitter: '@johndoe',
+                linkedin: 'johndoe',
+                tiktok: '@johndoe',
+                youtube: 'johndoe',
+                snapchat: 'johndoe',
+                pinterest: 'johndoe',
+                reddit: 'johndoe',
+                discord: 'johndoe#1234',
+                telegram: '@johndoe',
+                whatsapp: '+1234567890'
+            };
+            return placeholders[this.formData.platform] || 'username';
+        },
+
+        onPlatformChange() {
+            // Auto-populate title when platform changes
+            if (this.formData.platform && !this.formData.title) {
+                const platformNames = {
+                    facebook: 'Facebook',
+                    instagram: 'Instagram',
+                    twitter: 'Twitter',
+                    linkedin: 'LinkedIn',
+                    tiktok: 'TikTok',
+                    youtube: 'YouTube',
+                    snapchat: 'Snapchat',
+                    pinterest: 'Pinterest',
+                    reddit: 'Reddit',
+                    discord: 'Discord',
+                    telegram: 'Telegram',
+                    whatsapp: 'WhatsApp'
+                };
+                this.formData.title = `My ${platformNames[this.formData.platform]} Profile`;
+            }
+        },
+
         async generateQRCode() {
             await this.generateSocialMediaQRCode();
         },
@@ -241,47 +398,52 @@ export default {
         async generateSocialMediaQRCode() {
             this.isGenerating = true;
             try {
-                // Extract platform from URL for better title
-                const platform = this.extractPlatformFromUrl(this.formData.social_url);
-                const title = platform ? `${platform}SocialQR` : 'SocialMediaQR';
-                
+                // Create payload matching your backend structure
                 const payload = {
-                    type: "dynamic",
-                    service: "socialmedia",
-                    title: title,
-                    content: {
-                        url: this.formData.social_url.trim(),
-                        platform: platform
-                    },
+                    type: "social_media",
+                    service: "social_media",
+                    title: this.formData.title.trim(),
+                    description: this.formData.description.trim(),
+                    is_dynamic: true,
                     analytics: this.formData.analytics,
-                    active: true
+                    active: true,
+                    content: {
+                        platform: this.formData.platform,
+                        url: this.formData.url.trim(),
+                        handle: this.formData.handle.trim()
+                    }
                 };
 
                 console.log('🚀 Sending social media payload:', payload);
 
                 const response = await axios.post('/api/qr', payload);
                 
+                console.log('📥 Social media creation response:', response.data);
+                
                 if (response.data) {
                     let qrContent;
                     
+                    // For dynamic QR codes, use the redirect URL from backend
                     if (response.data.redirect_url) {
                         qrContent = response.data.redirect_url;
                     } else if (response.data.short_url) {
+                        // Construct full URL from short_url identifier
                         qrContent = `${config.apiBaseUrl}/scan/${response.data.short_url}`;
                     } else {
                         qrContent = response.data.qr_code;
                     }
                     
+                    // If backend doesn't provide proper URL, create a fallback
                     if (!qrContent || typeof qrContent === 'object') {
                         console.warn('Dynamic QR: Backend should return redirect_url or short_url, falling back to social media URL');
-                        qrContent = this.formData.social_url.trim();
+                        qrContent = this.formData.url.trim();
                     }
                     
                     this.qrCodeContent = qrContent;
                     this.showQRCodeModal = true;
                     
                     // Reset form
-                    this.formData.social_url = '';
+                    this.resetForm();
                     
                     // Refresh QR list
                     setTimeout(async () => {
@@ -301,21 +463,22 @@ export default {
             }
         },
 
-        extractPlatformFromUrl(url) {
-            const urlLower = url.toLowerCase();
-            if (urlLower.includes('facebook.com') || urlLower.includes('fb.com')) return 'Facebook';
-            if (urlLower.includes('instagram.com')) return 'Instagram';
-            if (urlLower.includes('twitter.com') || urlLower.includes('x.com')) return 'Twitter';
-            if (urlLower.includes('linkedin.com')) return 'LinkedIn';
-            if (urlLower.includes('tiktok.com')) return 'TikTok';
-            if (urlLower.includes('youtube.com') || urlLower.includes('youtu.be')) return 'YouTube';
-            if (urlLower.includes('snapchat.com')) return 'Snapchat';
-            if (urlLower.includes('pinterest.com')) return 'Pinterest';
-            if (urlLower.includes('reddit.com')) return 'Reddit';
-            if (urlLower.includes('discord.com') || urlLower.includes('discord.gg')) return 'Discord';
-            if (urlLower.includes('telegram.org') || urlLower.includes('t.me')) return 'Telegram';
-            if (urlLower.includes('whatsapp.com') || urlLower.includes('wa.me')) return 'WhatsApp';
-            return 'Social';
+        resetForm() {
+            this.formData = {
+                platform: '',
+                title: '',
+                description: '',
+                url: '',
+                handle: '',
+                analytics: true
+            };
+        },
+
+        // Pagination methods
+        changePage(page) {
+            if (page >= 1 && page <= this.totalPages) {
+                this.currentPage = page;
+            }
         },
 
         async fetchQRCodes() {
@@ -336,15 +499,21 @@ export default {
                     const qrData = response.data.data;
                     console.log('📊 Total QR codes fetched:', qrData.length);
                     
-                    // Filter for social media QR codes
+                    // Filter for social media QR codes using the new structure
                     const socialMediaQRs = qrData.filter(item => {
-                        const isSocialMediaService = item.service === 'socialmedia';
+                        // Check for new social_media service type
+                        const isSocialMediaService = item.service === 'social_media' || item.service === 'socialmedia';
+                        
+                        // Check for social media content structure
                         const hasSocialMediaContent = item.content && (
-                            item.content.url && this.isSocialMediaUrl(item.content.url) ||
-                            item.content.platform
+                            item.content.platform ||
+                            (item.content.url && this.isSocialMediaUrl(item.content.url))
                         );
                         
-                        return isSocialMediaService || hasSocialMediaContent;
+                        // Check for legacy social media URLs
+                        const hasLegacySocialUrl = item.content && item.content.social_url;
+                        
+                        return isSocialMediaService || hasSocialMediaContent || hasLegacySocialUrl;
                     });
 
                     console.log('🎯 Filtered social media QR codes:', socialMediaQRs.length);
@@ -377,21 +546,28 @@ export default {
 
         transformQRItem(item) {
             const content = item.content || {};
-            const url = content.url || '';
-            const platform = content.platform || this.extractPlatformFromUrl(url);
             
-            let displayName = platform ? `${platform} Profile` : 'Social Media Profile';
+            // Handle new structure with platform and handle
+            const platform = content.platform || this.extractPlatformFromUrl(content.url || content.social_url || '');
+            const url = content.url || content.social_url || '';
+            const handle = content.handle || this.extractUsernameFromUrl(url);
             
-            // Try to extract username or page name from URL
-            const username = this.extractUsernameFromUrl(url);
-            if (username) {
-                displayName += ` - ${username}`;
+            // Create display name
+            let displayName = item.title || item.description || 'Social Media Profile';
+            
+            // If we have platform and handle, create a more descriptive name
+            if (platform && handle) {
+                const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
+                displayName = `${platformName} - ${handle}`;
+            } else if (platform) {
+                const platformName = platform.charAt(0).toUpperCase() + platform.slice(1);
+                displayName = `${platformName} Profile`;
             }
 
             return {
                 id: item.id,
                 displayName: displayName,
-                qrCodeValue: item.redirect_url || item.qr_code || '',
+                qrCodeValue: item.redirect_url || item.qr_code || url,
                 analytics: {
                     type: 'Social Media',
                     scans: item.scan_count || 0,
@@ -401,7 +577,28 @@ export default {
             };
         },
 
+        extractPlatformFromUrl(url) {
+            if (!url) return null;
+            
+            const urlLower = url.toLowerCase();
+            if (urlLower.includes('facebook.com') || urlLower.includes('fb.com')) return 'facebook';
+            if (urlLower.includes('instagram.com')) return 'instagram';
+            if (urlLower.includes('twitter.com') || urlLower.includes('x.com')) return 'twitter';
+            if (urlLower.includes('linkedin.com')) return 'linkedin';
+            if (urlLower.includes('tiktok.com')) return 'tiktok';
+            if (urlLower.includes('youtube.com') || urlLower.includes('youtu.be')) return 'youtube';
+            if (urlLower.includes('snapchat.com')) return 'snapchat';
+            if (urlLower.includes('pinterest.com')) return 'pinterest';
+            if (urlLower.includes('reddit.com')) return 'reddit';
+            if (urlLower.includes('discord.com') || urlLower.includes('discord.gg')) return 'discord';
+            if (urlLower.includes('telegram.org') || urlLower.includes('t.me')) return 'telegram';
+            if (urlLower.includes('whatsapp.com') || urlLower.includes('wa.me')) return 'whatsapp';
+            return null;
+        },
+
         extractUsernameFromUrl(url) {
+            if (!url) return null;
+            
             try {
                 const urlObj = new URL(url);
                 const pathname = urlObj.pathname;
@@ -484,6 +681,7 @@ export default {
                 
                 const response = await axios.put(`/api/qr/${updatedQRCode.id}`, {
                     title: updatedQRCode.title,
+                    description: updatedQRCode.description,
                     content: updatedQRCode.content,
                     analytics: updatedQRCode.analytics,
                     active: updatedQRCode.active

@@ -170,7 +170,7 @@
             <div class="bg-gray-50 rounded border border-gray-200 p-3 flex items-center gap-2 self-stretch">
               <Icon name="ph:image" class="w-5 h-5 text-red-500" />
               <div class="flex-1">
-                <div class="text-sm font-medium text-gray-700">{{ currentImageInfo.name }}</div>
+                <div class="text-sm font-medium text-gray-700">{{ currentImageInfo.filename }}</div>
                 <div class="text-xs text-gray-500">{{ currentImageInfo.size }}</div>
               </div>
             </div>
@@ -202,12 +202,12 @@
                   <Icon name="ph:x" class="w-4 h-4" />
                 </button>
               </div>
-              <div v-else-if="!selectedImageFile" class="mt-2 text-sm text-gray-600">
+              <div v-else class="mt-2 text-sm text-gray-600">
                 <Icon name="ph:image" class="inline w-4 h-4 mr-1" />
-                Select a new image file to replace the current one
+                No file chosen
               </div>
             </div>
-            <p class="text-xs text-gray-500">Supported formats: JPG, JPEG, PNG, GIF. Maximum file size: 5MB. Leave empty to keep current file.</p>
+            <p class="text-xs text-gray-500">Supported formats: JPG, JPEG, PNG, GIF. Maximum file size: 5MB</p>
           </div>
         </div>
 
@@ -838,7 +838,7 @@ export default {
         this.currentImageInfo = {
           filename: fileName,
           size: fileSize,
-          url: this.qrCode.url || '' // Keep the URL for reference but don't display it as main field
+          url: this.qrCode.url || ''
         };
         
         console.log('🖼️ EditQRCodePopup - Loaded Image data:', {
@@ -903,7 +903,7 @@ export default {
         const fileSize = content.file_size ? `${(content.file_size / 1024 / 1024).toFixed(2)} MB` : 'Unknown size';
         
         this.currentPDFInfo = {
-          filename: fileName, // Changed from 'name' to 'filename' to match template
+          filename: fileName,
           size: fileSize
         };
         
@@ -1061,7 +1061,7 @@ export default {
           updateData.newFile = this.selectedImageFile;
           console.log('🖼️ EditQRCodePopup - Saving with new image file:', this.selectedImageFile.name);
         } else {
-          console.log('🖼️ EditQRCodePopup - Saving without new image file (keeping existing)');
+          console.log('🖼️️ EditQRCodePopup - Saving without new image file (keeping existing)');
         }
         
         console.log('🖼️ EditQRCodePopup - Emitting save event with data:', updateData);
