@@ -522,11 +522,12 @@ export default {
                 
                 let response = await axios.get('/api/qr', {
                     params: {
-                        page: this.currentPage,
-                        limit: this.itemsPerPage
+                        type: 'dynamic',
+                        page: 1,
+                        limit: 100 // Get more items to ensure we see updates
                     }
                 });
-
+        
                 if (response.data && response.data.data) {
                     let qrData = response.data.data;
                     
@@ -540,18 +541,19 @@ export default {
                                item.content.filename &&
                                item.content.file_ref_id;
                     });
-
+        
                     this.qrItems = imageQRs.map(item => {
                         let displayName = 'Image QR';
                         let imageUrl = '';
                         
                         if (item.content && typeof item.content === 'object') {
-                            displayName = item.content.filename || item.title || 'Image QR';
+                            // FIXED: Use title first, then filename as fallback
+                            displayName = item.content.title || item.title || item.content.filename || 'Image QR';
                             imageUrl = item.content.url || '';
                         } else {
                             displayName = item.title || 'Image QR';
                         }
-
+        
                         let qrCodeValue = '';
                         if (item.redirect_url) {
                             qrCodeValue = item.redirect_url;
@@ -560,7 +562,7 @@ export default {
                         } else {
                             qrCodeValue = imageUrl;
                         }
-
+        
                         return {
                             id: item.id,
                             displayName: displayName,
@@ -575,6 +577,8 @@ export default {
                             }
                         };
                     });
+                    
+                    console.log('✅ Silent refresh completed, found', this.qrItems.length, 'image QR codes');
                 } else {
                     this.qrItems = [];
                 }
@@ -695,7 +699,6 @@ export default {
 
                 let response;
                 
-                // Check if a new file was provided
                 if (updatedData.newFile) {
                     console.log('📁 New image file provided, handling file upload');
                     

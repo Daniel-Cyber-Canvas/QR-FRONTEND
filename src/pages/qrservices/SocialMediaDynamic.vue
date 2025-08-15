@@ -4,7 +4,17 @@
             <div class="flex flex-col gap-6 items-start justify-start flex-1 relative">
                 <div class="flex flex-col gap-6 items-start justify-start self-stretch shrink-0 relative">
                     <div class="flex flex-col gap-6 items-start justify-start self-stretch shrink-0 relative">
-                        <div class="text-2xl font-bold text-gray-800">Social Media QR Code - Dynamic Mode</div>
+                        <!-- Header with Navigation -->
+                        <div class="flex flex-row items-center justify-between self-stretch">
+                            <div class="text-2xl font-bold text-gray-800">Social Media QR Code - Dynamic Mode</div>
+                            <router-link 
+                                to="/qrmanagement/socialmedia"
+                                class="bg-[#0c768a] text-white px-4 py-2 rounded hover:bg-opacity-90 transition-colors duration-300 flex items-center gap-2"
+                            >
+                                <Icon name="ph:list" class="w-4 h-4" />
+                                Manage QR Codes
+                            </router-link>
+                        </div>
                         
                         <form @submit.prevent="generateQRCode" class="pr-[30px] flex flex-row gap-[30px] items-start justify-start self-stretch shrink-0 relative">
                             <div class="bg-white rounded p-2 flex flex-col gap-4 items-start justify-start flex-1 relative shadow-sm">
@@ -104,19 +114,42 @@
                             <div class="bg-white rounded border-solid border-[#e2e8f0] border p-4 flex flex-col gap-4 items-start justify-start w-full relative">
                                 <div class="flex flex-row items-center justify-between self-stretch shrink-0 relative">
                                     <div class="text-lg font-semibold text-gray-800">
-                                        Dynamic Social Media QR Codes
+                                        Dynamic Social Media QR Codes ({{ qrItems.length }} found)
                                     </div>
-                                    <button 
-                                        @click="fetchQRCodes"
-                                        :disabled="isLoading"
-                                        class="bg-[#0c768a] text-white px-4 py-2 rounded hover:bg-opacity-90 transition-colors duration-300 disabled:opacity-50"
-                                    >
-                                        <span v-if="isLoading" class="flex items-center gap-2">
-                                            <Icon name="ph:spinner" class="w-4 h-4 animate-spin" />
-                                            Loading...
-                                        </span>
-                                        <span v-else>Refresh</span>
-                                    </button>
+                                    <div class="flex gap-2">
+                                        <!-- Debug Info Button -->
+                                        <button 
+                                            @click="showDebugInfo = !showDebugInfo"
+                                            class="bg-gray-500 text-white px-3 py-1 rounded text-sm hover:bg-gray-600 transition-colors duration-300"
+                                        >
+                                            {{ showDebugInfo ? 'Hide' : 'Show' }} Debug
+                                        </button>
+                                        <button 
+                                            @click="fetchQRCodes"
+                                            :disabled="isLoading"
+                                            class="bg-[#0c768a] text-white px-4 py-2 rounded hover:bg-opacity-90 transition-colors duration-300 disabled:opacity-50"
+                                        >
+                                            <span v-if="isLoading" class="flex items-center gap-2">
+                                                <Icon name="ph:spinner" class="w-4 h-4 animate-spin" />
+                                                Loading...
+                                            </span>
+                                            <span v-else>Refresh</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Debug Information -->
+                                <div v-if="showDebugInfo" class="bg-gray-100 p-4 rounded text-sm">
+                                    <h4 class="font-bold mb-2">Debug Information:</h4>
+                                    <p><strong>Total QR Items:</strong> {{ qrItems.length }}</p>
+                                    <p><strong>Is Loading:</strong> {{ isLoading }}</p>
+                                    <p><strong>Current Page:</strong> {{ currentPage }}</p>
+                                    <p><strong>Items Per Page:</strong> {{ itemsPerPage }}</p>
+                                    <p><strong>Paginated Items:</strong> {{ paginatedQRItems.length }}</p>
+                                    <div v-if="qrItems.length > 0" class="mt-2">
+                                        <strong>Sample QR Item:</strong>
+                                        <pre class="text-xs bg-white p-2 rounded mt-1">{{ JSON.stringify(qrItems[0], null, 2) }}</pre>
+                                    </div>
                                 </div>
 
                                 <!-- Loading State -->
@@ -218,11 +251,12 @@
         />
 
         <!-- Edit QR Code Popup -->
-        <EditQRCodePopup
+        <SocialMediaEditPopup
             v-if="showEditPopup && selectedQRItem"
+            :is-visible="showEditPopup"
             :qr-code="selectedQRItem"
             @close="closeEditPopup"
-            @save="saveEditedQRCode"
+            @updated="saveEditedQRCode"
         />
 
         <DeleteConfirmationPopup
@@ -257,7 +291,7 @@ import InputFieldVue from '@/components/InputField.vue';
 import QRCodeModal from '@/components/DownloadQR.vue';
 import DownloadQRModal from '@/components/DownloadQR.vue';
 import QRCodeItem from '@/components/QRCodeItem.vue';
-import EditQRCodePopup from '@/components/EditQRCodePopup.vue';
+import SocialMediaEditPopup from '@/components/SocialMediaEditPopup.vue';
 import DeleteConfirmationPopup from '@/components/DeleteConfirmationPopup.vue';
 import AnalyticsPopup from '@/components/AnalyticsPopup.vue';
 import { Icon } from '@iconify/vue';
@@ -272,7 +306,7 @@ export default {
         QRCodeModal,
         DownloadQRModal,
         QRCodeItem,
-        EditQRCodePopup,
+        SocialMediaEditPopup,
         DeleteConfirmationPopup,
         AnalyticsPopup,
         Icon
@@ -301,7 +335,8 @@ export default {
             showDownloadModal: false,
             downloadQRContent: '',
             selectedQRItem: null,
-            selectedQRAnalytics: null
+            selectedQRAnalytics: null,
+            showDebugInfo: false
         };
     },
     computed: {
@@ -566,6 +601,22 @@ export default {
 
             return {
                 id: item.id,
+                title: item.title || displayName,
+                description: item.description || content.description || '',
+                platform: platform,
+                platform_display: platform ? platform.charAt(0).toUpperCase() + platform.slice(1) : 'Social Media',
+                url: url,
+                handle: handle,
+                content: {
+                    platform: platform,
+                    url: url,
+                    title: item.title || displayName,
+                    description: item.description || content.description || '',
+                    handle: handle
+                },
+                analytics: item.analytics !== undefined ? item.analytics : true,
+                active: item.active !== undefined ? item.active : true,
+                qr_content: item.redirect_url || item.qr_code || url,
                 displayName: displayName,
                 qrCodeValue: item.redirect_url || item.qr_code || url,
                 analytics: {
@@ -621,18 +672,46 @@ export default {
 
         // Event Handlers
         handleEdit(qrItem) {
-            console.log('🔧 Edit clicked for Social Media QR Item:', qrItem);
             try {
-                if (qrItem) {
-                    this.selectedQRItem = { ...qrItem };
+                console.log('✏️ Edit clicked for Social Media QR Item:', qrItem);
+                
+                if (qrItem && qrItem.id) {
+                    // Create a clean copy with proper structure
+                    this.selectedQRItem = {
+                        id: qrItem.id,
+                        title: qrItem.title || '',
+                        description: qrItem.description || '',
+                        platform: qrItem.platform || '',
+                        platform_display: qrItem.platform_display || '',
+                        url: qrItem.url || '',
+                        handle: qrItem.handle || '',
+                        analytics: qrItem.analytics !== undefined ? qrItem.analytics : true,
+                        active: qrItem.active !== undefined ? qrItem.active : true,
+                        qr_content: qrItem.qr_content || qrItem.qrCodeValue || '',
+                        content: {
+                            platform: qrItem.platform || qrItem.content?.platform || '',
+                            url: qrItem.url || qrItem.content?.url || '',
+                            title: qrItem.title || qrItem.content?.title || '',
+                            description: qrItem.description || qrItem.content?.description || '',
+                            handle: qrItem.handle || qrItem.content?.handle || ''
+                        },
+                        originalData: qrItem.originalData || qrItem
+                    };
+                    
+                    console.log('📝 Prepared selectedQRItem for edit:', this.selectedQRItem);
+                    
+                    // Use nextTick to ensure DOM is updated
                     this.$nextTick(() => {
                         this.showEditPopup = true;
+                        console.log('✅ Edit popup visibility set to:', this.showEditPopup);
                     });
                 } else {
-                    console.error('❌ No QR item provided for editing');
+                    console.error('❌ Invalid QR item provided for editing:', qrItem);
+                    alert('Unable to edit this QR code. Please try refreshing the page.');
                 }
             } catch (error) {
                 console.error('❌ Error in handleEdit:', error);
+                alert('An error occurred while opening the edit dialog.');
             }
         },
 
@@ -656,6 +735,7 @@ export default {
 
         // Popup Management
         closeEditPopup() {
+            console.log('🔒 Closing edit popup');
             this.showEditPopup = false;
             this.selectedQRItem = null;
         },
@@ -702,7 +782,7 @@ export default {
         },
 
         async confirmDelete() {
-            if (!this.selectedQRItem) return;
+            if (!this.selectedQRItem || this.isDeleting) return;
             
             this.isDeleting = true;
             try {
@@ -712,19 +792,33 @@ export default {
                 
                 if (response.status === 200 || response.status === 204) {
                     console.log('✅ Social Media QR code deleted successfully');
+                    
+                    // Remove the item from local array immediately
+                    const index = this.qrItems.findIndex(item => item.id === this.selectedQRItem.id);
+                    if (index > -1) {
+                        this.qrItems.splice(index, 1);
+                    }
+                    
+                    // Close popup first
                     this.closeDeleteConfirmation();
-                    await this.fetchQRCodes(); // Refresh the list
+                    
+                    // Show success notification only once
+                    setTimeout(() => {
+                        alert('Social Media QR code deleted successfully!');
+                    }, 100);
                 } else {
                     throw new Error('Unexpected response status');
                 }
             } catch (error) {
                 console.error('❌ Error deleting Social Media QR code:', error);
                 const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
-                alert(`Failed to delete Social Media QR code: ${errorMessage}`);
+                setTimeout(() => {
+                    alert(`Failed to delete Social Media QR code: ${errorMessage}`);
+                }, 100);
             } finally {
                 this.isDeleting = false;
             }
-        }
+        },
     }
 };
 </script>

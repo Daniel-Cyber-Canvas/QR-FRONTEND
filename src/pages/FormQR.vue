@@ -630,18 +630,215 @@
                                 </div>
                             </template>
 
+                            <template v-else-if="selectedType === 'Social Media'">
+                                <div class="bg-white rounded p-2 flex flex-col gap-4 items-start justify-start flex-1 relative shadow-sm">
+                                    <div class="flex flex-col gap-3 items-start justify-start self-stretch shrink-0">
+                                        <div class="text-sm font-medium text-gray-700 mb-2">
+                                            Social Media QR Code - Dynamic Mode
+                                        </div>
+                                        
+                                        <!-- Platform Selection -->
+                                        <div class="flex flex-col gap-2 w-full">
+                                            <label class="text-sm font-medium text-gray-700">Social Media Platform</label>
+                                            <select 
+                                                v-model="formData.social_platform" 
+                                                @change="onSocialPlatformChange"
+                                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#0c768a] focus:border-transparent"
+                                                required
+                                            >
+                                                <option value="">Select Platform</option>
+                                                <option value="facebook">Facebook</option>
+                                                <option value="instagram">Instagram</option>
+                                                <option value="twitter">Twitter/X</option>
+                                                <option value="linkedin">LinkedIn</option>
+                                                <option value="tiktok">TikTok</option>
+                                                <option value="youtube">YouTube</option>
+                                                <option value="snapchat">Snapchat</option>
+                                                <option value="pinterest">Pinterest</option>
+                                                <option value="reddit">Reddit</option>
+                                                <option value="discord">Discord</option>
+                                                <option value="telegram">Telegram</option>
+                                                <option value="whatsapp">WhatsApp</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Title Field -->
+                                        <input-field-vue 
+                                            class="w-full" 
+                                            label="QR Code Title"
+                                            placeholder="My Facebook Profile" 
+                                            v-model="formData.social_title" 
+                                            required 
+                                        />
+
+                                        <!-- Description Field -->
+                                        <input-field-vue 
+                                            class="w-full" 
+                                            label="Description"
+                                            placeholder="Follow me on Facebook" 
+                                            v-model="formData.social_description" 
+                                            required 
+                                        />
+
+                                        <!-- URL Field -->
+                                        <input-field-vue 
+                                            class="w-full" 
+                                            label="Profile URL"
+                                            :placeholder="getSocialUrlPlaceholder()" 
+                                            v-model="formData.social_url" 
+                                            required 
+                                            type="url"
+                                        />
+
+                                        <!-- Handle/Username Field -->
+                                        <input-field-vue 
+                                            class="w-full" 
+                                            label="Username/Handle"
+                                            :placeholder="getSocialHandlePlaceholder()" 
+                                            v-model="formData.social_handle" 
+                                            required 
+                                        />
+                                        
+                                        <!-- Analytics Option -->
+                                        <div class="flex items-center gap-2">
+                                            <input 
+                                                type="checkbox" 
+                                                id="analytics-social" 
+                                                v-model="formData.analytics"
+                                                class="w-4 h-4 text-[#0c768a] border-gray-300 rounded focus:ring-[#0c768a]"
+                                                checked
+                                            >
+                                            <label for="analytics-social" class="text-sm text-gray-700">Enable Analytics Tracking</label>
+                                        </div>
+                                        
+                                        <div class="px-3.5 pb-3 flex flex-row gap-[18px] items-start justify-end self-stretch shrink-0">
+                                            <button
+                                                type="submit"
+                                                class="bg-[#0c768a] rounded px-4 py-2 text-white hover:bg-opacity-90 transition-colors duration-300"
+                                            >
+                                                Generate Social Media QR Code
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+
                             <template v-else>
                                 <p class="text-[#0c768a] text-lg text-center">Coming Soon.</p>
                             </template>
                         </form>
+
+                        <!-- Social Media QR Codes List Section -->
+                        <div v-if="selectedType === 'Social Media'" class="w-full mt-8">
+                            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                                <!-- Header -->
+                                <div class="flex items-center justify-between mb-6">
+                                    <h2 class="text-xl font-semibold text-gray-800">
+                                        Dynamic Social Media QR Codes ({{ qrItems.length }} found)
+                                    </h2>
+                                    <button
+                                        @click="fetchQRCodes"
+                                        class="flex items-center gap-2 px-4 py-2 bg-[#0c768a] text-white rounded-lg hover:bg-opacity-90 transition-colors"
+                                        :disabled="isLoading"
+                                    >
+                                        <Icon icon="mdi:refresh" class="w-4 h-4" />
+                                        Refresh
+                                    </button>
+                                </div>
+
+                                <!-- Loading State -->
+                                <div v-if="isLoading && qrItems.length === 0" class="flex flex-col items-center justify-center py-8 text-gray-500">
+                                    <Icon icon="mdi:loading" class="w-8 h-8 animate-spin mb-2" />
+                                    <p>Loading QR codes...</p>
+                                </div>
+
+                                <!-- Empty State -->
+                                <div v-else-if="!isLoading && qrItems.length === 0" class="flex flex-col items-center justify-center py-8 text-gray-500">
+                                    <Icon icon="mdi:qrcode" class="w-16 h-16 mb-4 text-gray-300" />
+                                    <p>No social media QR codes found. Create your first one above!</p>
+                                </div>
+
+                                <!-- QR Codes List -->
+                                <div v-else class="space-y-4">
+                                    <QRCodeItem
+                                        v-for="qrItem in paginatedQRItems"
+                                        :key="qrItem.id"
+                                        :qr-item="qrItem"
+                                        @analytics="handleAnalytics"
+                                        @delete="handleDelete"
+                                        @edit="handleEdit"
+                                        @download="handleDownload"
+                                    />
+                                </div>
+
+                                <!-- Pagination -->
+                                <div v-if="qrItems.length > itemsPerPage" class="flex flex-col gap-3 items-center justify-center w-full mt-6">
+                                    <div class="flex items-center gap-2">
+                                        <button
+                                            @click="currentPage = Math.max(1, currentPage - 1)"
+                                            :disabled="currentPage === 1"
+                                            class="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
+                                        >
+                                            Previous
+                                        </button>
+                                        <span class="px-3 py-1 text-sm text-gray-600">
+                                            Page {{ currentPage }} of {{ totalPages }}
+                                        </span>
+                                        <button
+                                            @click="currentPage = Math.min(totalPages, currentPage + 1)"
+                                            :disabled="currentPage === totalPages"
+                                            class="px-3 py-1 bg-gray-200 text-gray-700 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
+                                        >
+                                            Next
+                                        </button>
+                                    </div>
+                                    <p class="text-sm text-gray-500">{{ paginationInfo }}</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </side-navigation>
+        
+        <!-- Modals -->
         <QRCodeModal
             v-if="showQRCodeModal" 
             :qr-code-content="qrCodeContent" 
             @close="closeQRCodeModal" 
+        />
+        
+        <!-- Social Media Edit Popup -->
+        <SocialMediaEditPopup
+            v-if="showSocialMediaEditPopup"
+            :qr-code="editingQRCode"
+            @close="closeSocialMediaEditPopup"
+            @updated="saveEditedQRCode"
+        />
+
+        <!-- Delete Confirmation Popup -->
+        <DeleteConfirmationPopup
+            v-if="showDeleteConfirmation"
+            :is-visible="showDeleteConfirmation"
+            :item-type="qrToDelete?.title || 'QR Code'"
+            :item-code="qrToDelete?.id || ''"
+            @confirm="confirmDelete"
+            @cancel="closeDeleteConfirmation"
+        />
+
+        <!-- Analytics Popup -->
+        <AnalyticsPopup
+            v-if="showAnalytics"
+            :qr-id="analyticsQRCode?.id"
+            :qr-code-url="analyticsQRCode?.redirect_url || analyticsQRCode?.qr_code"
+            @close="closeAnalytics"
+        />
+
+        <!-- Download Modal -->
+        <DownloadQR
+            v-if="showDownloadModal"
+            :qr-code-content="downloadQRContent"
+            @close="closeDownloadModal"
         />
     </div>
 </template>
@@ -651,6 +848,11 @@ import SideNavigation from "@/components/SideNavigation.vue";
 import InputFieldVue from '@/components/InputField.vue';
 import ButtonVue from '@/components/Button.vue';
 import QRCodeModal from '@/components/DownloadQR.vue';
+import QRCodeItem from '@/components/QRCodeItem.vue';
+import SocialMediaEditPopup from '@/components/SocialMediaEditPopup.vue';
+import DeleteConfirmationPopup from '@/components/DeleteConfirmationPopup.vue';
+import AnalyticsPopup from '@/components/AnalyticsPopup.vue';
+import DownloadQR from '@/components/DownloadQR.vue';
 import { Icon } from '@iconify/vue';
 import axios from '@/axios.js';
 import config from '@/config.js';
@@ -662,6 +864,11 @@ export default {
         InputFieldVue,
         ButtonVue,
         QRCodeModal,
+        QRCodeItem,
+        SocialMediaEditPopup,
+        DeleteConfirmationPopup,
+        AnalyticsPopup,
+        DownloadQR,
         Icon
     },
     data() {
@@ -711,15 +918,70 @@ export default {
                 // Business Page fields
                 business_name: '',
                 business_url: '',
-                business_description: ''
+                business_description: '',
+                // Social Media fields
+                social_platform: '',
+                social_title: '',
+                social_description: '',
+                social_url: '',
+                social_handle: '',
+                // Menu fields
+                menu_name: '',
+                menu_description: '',
+                menu_restaurant_name: '',
+                menu_cuisine_type: '',
+                menu_contact_info: '',
+                menu_address: '',
+                menu_hours: '',
+                menu_website: ''
             },
             showQRCodeModal: false,
             qrCodeContent: '',
             // PDF upload fields
             selectedFile: null,
             isUploading: false,
-            imagePreviewUrl: null
+            imagePreviewUrl: null,
+            // QR List management for Social Media
+            qrItems: [],
+            isLoading: false,
+            currentPage: 1,
+            itemsPerPage: 5,
+            // Popup states
+            showSocialMediaEditPopup: false,
+            editingQRCode: null,
+            showDeleteConfirmation: false,
+            qrToDelete: null,
+            showAnalytics: false,
+            analyticsQRCode: null,
+            showDownloadModal: false,
+            downloadQRContent: ''
+
         };
+    },
+    computed: {
+        paginatedQRItems() {
+            const sortedItems = [...this.qrItems].sort((a, b) => {
+                return new Date(b.created_at) - new Date(a.created_at);
+            });
+            
+            const start = (this.currentPage - 1) * this.itemsPerPage;
+            const end = start + this.itemsPerPage;
+            return sortedItems.slice(start, end);
+        },
+        totalPages() {
+            return Math.ceil(this.qrItems.length / this.itemsPerPage);
+        },
+        paginationInfo() {
+            const start = (this.currentPage - 1) * this.itemsPerPage + 1;
+            const end = Math.min(this.currentPage * this.itemsPerPage, this.qrItems.length);
+            return `Showing ${start}-${end} of ${this.qrItems.length} QR codes`;
+        }
+    },
+    async mounted() {
+        // Fetch QR codes if we're on the Social Media page
+        if (this.selectedType === 'Social Media' && this.selectedMode === 'dynamic') {
+            await this.fetchQRCodes();
+        }
     },
     methods: {
         determineDefaultMode(type) {
@@ -763,7 +1025,10 @@ export default {
                 await this.generateAppQRCode();
             } else if (this.selectedType === 'Business Page') {
                 await this.generateBusinessPageQRCode();
+            } else if (this.selectedType === 'Social Media') {
+                await this.generateSocialMediaQRCode();
             }
+
         },
 
         handleFileSelect(event) {
@@ -1627,6 +1892,356 @@ export default {
                 console.error('Error generating Business Page QR code:', error);
                 const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
                 alert(`Failed to generate QR code: ${errorMessage}`);
+            }
+        },
+        
+        onSocialPlatformChange() {
+            // Clear URL and handle when platform changes
+            this.formData.social_url = '';
+            this.formData.social_handle = '';
+        },
+        
+        getSocialUrlPlaceholder() {
+            const placeholders = {
+                facebook: 'https://facebook.com/username',
+                instagram: 'https://instagram.com/username',
+                twitter: 'https://twitter.com/username',
+                linkedin: 'https://linkedin.com/in/username',
+                tiktok: 'https://tiktok.com/@username',
+                youtube: 'https://youtube.com/c/channelname',
+                snapchat: 'https://snapchat.com/add/username',
+                pinterest: 'https://pinterest.com/username',
+                reddit: 'https://reddit.com/user/username',
+                discord: 'https://discord.gg/serverinvite',
+                telegram: 'https://t.me/username',
+                whatsapp: 'https://wa.me/1234567890'
+            };
+            return placeholders[this.formData.social_platform] || 'Enter your profile URL';
+        },
+        
+        getSocialHandlePlaceholder() {
+            const placeholders = {
+                facebook: '@username',
+                instagram: '@username',
+                twitter: '@username',
+                linkedin: 'username',
+                tiktok: '@username',
+                youtube: 'channelname',
+                snapchat: 'username',
+                pinterest: '@username',
+                reddit: 'u/username',
+                discord: 'username#1234',
+                telegram: '@username',
+                whatsapp: '+1234567890'
+            };
+            return placeholders[this.formData.social_platform] || 'Enter your username/handle';
+        },
+        
+        async generateSocialMediaQRCode() {
+            try {
+                const title = this.formData.social_title.trim() || this.qrCodeName || 'SocialMediaQR';
+                
+                const payload = {
+                    type: "dynamic",
+                    service: "social_media",
+                    title: title,
+                    description: this.formData.social_description.trim() || "Social Media Profile",
+                    is_dynamic: true,
+                    analytics: this.formData.analytics,
+                    active: true,
+                    content: {
+                        platform: this.formData.social_platform,
+                        url: this.formData.social_url.trim(),
+                        handle: this.formData.social_handle.trim()
+                    }
+                };
+
+                const response = await axios.post('/api/qr', payload);
+                
+                if (response.data) {
+                    let qrContent;
+                    
+                    // For dynamic QR codes, we MUST get a redirect URL from backend
+                    if (response.data.redirect_url) {
+                        qrContent = response.data.redirect_url;
+                    } else if (response.data.short_url) {
+                        // Construct full URL from short_url identifier
+                        qrContent = `${config.apiBaseUrl}/scan/${response.data.short_url}`;
+                    } else if (response.data.qr_code && typeof response.data.qr_code === 'string' && response.data.qr_code.startsWith('http')) {
+                        // Use qr_code if it's a valid URL (redirect URL)
+                        qrContent = response.data.qr_code;
+                    } else {
+                        // If backend doesn't provide proper redirect URL, this is a backend issue
+                        console.error('Backend Error: Dynamic QR codes must return redirect_url or short_url for proper tracking');
+                        console.error('Response received:', response.data);
+                        throw new Error('Backend did not return a proper redirect URL for dynamic QR code. Please check backend implementation.');
+                    }
+                    
+                    this.qrCodeContent = qrContent;
+                    this.showQRCodeModal = true;
+                    
+                    // Reset form
+                    this.resetSocialMediaForm();
+                    
+                    // Refresh QR list
+                    await this.fetchQRCodes();
+                    
+                    // Log for debugging
+                    console.log('Generated Social Media QR with redirect URL:', qrContent);
+                } else {
+                    alert('Error generating QR code: No data received');
+                }
+            } catch (error) {
+                console.error('Error generating Social Media QR code:', error);
+                const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
+                alert(`Failed to generate QR code: ${errorMessage}`);
+            }
+        },
+        
+        resetSocialMediaForm() {
+            this.formData.social_platform = '';
+            this.formData.social_title = '';
+            this.formData.social_description = '';
+            this.formData.social_url = '';
+            this.formData.social_handle = '';
+        },
+        
+        async fetchQRCodes() {
+            this.isLoading = true;
+            try {
+                console.log('🔍 Starting fetchQRCodes for social media...');
+                
+                const response = await axios.get('/api/qr', {
+                    params: { limit: 100 }
+                });
+                
+                // Fix: Access the data array correctly
+                const qrData = response.data.data || response.data || [];
+                
+                if (Array.isArray(qrData)) {
+                    console.log('📦 Raw QR data received:', qrData.length, 'items');
+                    
+                    // Improved filtering for social media QR codes
+                    const socialMediaQRs = qrData.filter(qr => {
+                        // Primary check: service field must be 'social_media'
+                        if (qr.service === 'social_media') {
+                            return true;
+                        }
+                        
+                        // Secondary check: content structure for social media indicators
+                        if (qr.content && typeof qr.content === 'object') {
+                            // Must have both platform and service fields indicating social media
+                            if (qr.content.platform && qr.content.service === 'social_media') {
+                                return true;
+                            }
+                        }
+                        
+                        // Exclude other services even if they have social media-like URLs
+                        return false;
+                    });
+                    
+                    console.log('🎯 Filtered social media QRs:', socialMediaQRs.length);
+                    console.log('🔍 Social media QR IDs:', socialMediaQRs.map(qr => qr.id));
+                    
+                    this.qrItems = socialMediaQRs.map(item => this.transformQRItem(item));
+                    
+                    console.log('✅ Transformed social media QR items:', this.qrItems.length);
+                } else {
+                    console.warn('⚠️ API response data is not an array:', qrData);
+                    this.qrItems = [];
+                }
+            } catch (error) {
+                console.error('❌ Error fetching QR codes:', error);
+                this.qrItems = [];
+            } finally {
+                this.isLoading = false;
+            }
+        },
+        
+        isSocialMediaUrl(url) {
+            const socialDomains = [
+                'facebook.com', 'instagram.com', 'twitter.com', 'x.com',
+                'linkedin.com', 'tiktok.com', 'youtube.com', 'snapchat.com',
+                'pinterest.com', 'reddit.com', 'discord.gg', 't.me', 'wa.me'
+            ];
+            
+            try {
+                const urlObj = new URL(url);
+                return socialDomains.some(domain => urlObj.hostname.includes(domain));
+            } catch {
+                return false;
+            }
+        },
+        
+        transformQRItem(item) {
+            let platform = 'unknown';
+            let url = '';
+            let handle = '';
+            
+            if (item.content && typeof item.content === 'object') {
+                platform = item.content.platform || this.extractPlatformFromUrl(item.content.url) || 'unknown';
+                url = item.content.url || '';
+                handle = item.content.handle || this.extractUsernameFromUrl(item.content.url) || '';
+            } else if (item.social_url) {
+                url = item.social_url;
+                platform = this.extractPlatformFromUrl(url);
+                handle = this.extractUsernameFromUrl(url);
+            }
+            
+            return {
+                id: item.id,
+                title: item.title || `${platform} Profile`,
+                description: item.description || '',
+                platform: platform,
+                url: url,
+                handle: handle,
+                analytics: item.analytics || false,
+                created_at: item.created_at,
+                updated_at: item.updated_at,
+                qr_code: item.qr_code,
+                redirect_url: item.redirect_url,
+                short_url: item.short_url,
+                active: item.active
+            };
+        },
+        
+        extractPlatformFromUrl(url) {
+            if (!url) return 'unknown';
+            
+            const platformMap = {
+                'facebook.com': 'facebook',
+                'instagram.com': 'instagram',
+                'twitter.com': 'twitter',
+                'x.com': 'twitter',
+                'linkedin.com': 'linkedin',
+                'tiktok.com': 'tiktok',
+                'youtube.com': 'youtube',
+                'snapchat.com': 'snapchat',
+                'pinterest.com': 'pinterest',
+                'reddit.com': 'reddit',
+                'discord.gg': 'discord',
+                't.me': 'telegram',
+                'wa.me': 'whatsapp'
+            };
+            
+            try {
+                const urlObj = new URL(url);
+                for (const [domain, platform] of Object.entries(platformMap)) {
+                    if (urlObj.hostname.includes(domain)) {
+                        return platform;
+                    }
+                }
+            } catch {
+                // Invalid URL
+            }
+            
+            return 'unknown';
+        },
+        
+        extractUsernameFromUrl(url) {
+            if (!url) return '';
+            
+            try {
+                const urlObj = new URL(url);
+                const pathname = urlObj.pathname;
+                
+                // Extract username from common social media URL patterns
+                if (pathname.startsWith('/')) {
+                    const parts = pathname.split('/').filter(part => part.length > 0);
+                    if (parts.length > 0) {
+                        return parts[0].replace('@', '');
+                    }
+                }
+            } catch {
+                // Invalid URL
+            }
+            
+            return '';
+        },
+        
+        // Event handlers for QR list actions
+        handleEdit(qrItem) {
+            this.editingQRCode = qrItem;
+            this.showSocialMediaEditPopup = true;
+        },
+        
+        handleDelete(qrItem) {
+            this.qrToDelete = qrItem;
+            this.showDeleteConfirmation = true;
+        },
+        
+        handleAnalytics(qrItem) {
+            this.analyticsQRCode = qrItem;
+            this.showAnalytics = true;
+        },
+        
+        handleDownload(qrItem) {
+            // For dynamic QR codes, prioritize redirect_url for proper tracking
+            if (qrItem.redirect_url) {
+                this.downloadQRContent = qrItem.redirect_url;
+            } else if (qrItem.short_url) {
+                // Construct full URL from short_url identifier
+                this.downloadQRContent = `${config.apiBaseUrl}/scan/${qrItem.short_url}`;
+            } else {
+                // Fallback to qr_code content
+                this.downloadQRContent = qrItem.qr_code || '';
+            }
+            this.showDownloadModal = true;
+        },
+        
+        // Popup management methods
+        closeSocialMediaEditPopup() {
+            this.showSocialMediaEditPopup = false;
+            this.editingQRCode = null;
+        },
+        
+        closeDeleteConfirmation() {
+            this.showDeleteConfirmation = false;
+            this.qrToDelete = null;
+        },
+        
+        closeAnalytics() {
+            this.showAnalytics = false;
+            this.analyticsQRCode = null;
+        },
+        
+        closeDownloadModal() {
+            this.showDownloadModal = false;
+            this.downloadQRContent = '';
+        },
+        
+        async saveEditedQRCode(updatedQRCode) {
+            try {
+                // Update the item in the list
+                const index = this.qrItems.findIndex(item => item.id === updatedQRCode.id);
+                if (index !== -1) {
+                    this.qrItems[index] = {
+                        ...this.qrItems[index],
+                        ...updatedQRCode,
+                        updated_at: new Date().toISOString()
+                    };
+                }
+                
+                this.closeSocialMediaEditPopup();
+                // SocialMediaEditPopup already shows success message
+            } catch (error) {
+                console.error('Error updating QR code:', error);
+                alert('Failed to update QR code');
+            }
+        },
+        
+        async confirmDelete() {
+            try {
+                await axios.delete(`/api/qr/${this.qrToDelete.id}`);
+                
+                // Remove from list
+                this.qrItems = this.qrItems.filter(item => item.id !== this.qrToDelete.id);
+                
+                this.closeDeleteConfirmation();
+                alert('QR code deleted successfully!');
+            } catch (error) {
+                console.error('Error deleting QR code:', error);
+                alert('Failed to delete QR code');
             }
         },
         

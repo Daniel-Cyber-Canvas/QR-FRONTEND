@@ -48,6 +48,11 @@ const router = createRouter({
       name: 'website-qr',
       component: () => import('@/pages/qrmanagement/Website.vue')
     },
+    {
+      path: '/qrmanagement/socialmedia',
+      name: 'socialmedia-qr',
+      component: () => import('@/pages/qrmanagement/SocialMedia.vue')
+    },
     // QR Service Routes - Virtual Card
     {
       path: '/qr/virtualcard/static',

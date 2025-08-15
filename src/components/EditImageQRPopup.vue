@@ -29,26 +29,7 @@
             </div>
           </div>
 
-          <!-- Current Image Display -->
-          <div v-if="currentImageUrl" class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
-            <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
-              Current Image
-            </label>
-            <div class="bg-gray-50 rounded border border-gray-200 p-3 self-stretch">
-              <img 
-                :src="currentImageUrl" 
-                :alt="imageData.title || 'Current image'"
-                class="max-w-full max-h-48 object-contain rounded border mx-auto block"
-                @error="handleImageError"
-              />
-              <div class="mt-2 text-center" v-if="currentImageInfo">
-                <div class="text-sm font-medium text-gray-700">{{ currentImageInfo.filename }}</div>
-                <div class="text-xs text-gray-500">{{ currentImageInfo.size }}</div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Current Image Info (fallback if image can't be displayed) -->
+          <!-- Current Image File -->
           <div v-if="currentImageInfo" class="flex flex-col gap-2 items-start justify-start self-stretch shrink-0 relative">
             <label class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-sm font-normal">
               Current Image File
@@ -172,11 +153,14 @@ export default {
     initializeImageData() {
       console.log('🔧 EditImageQRPopup - Initializing image data:', this.qrCode);
       
-      // Extract title from various possible locations
+      // Extract title from various possible locations with priority order
       const content = this.qrCode.originalData?.content || this.qrCode.content || {};
+      
+      // Priority: content.title > originalData.title > qrCode.title > displayName > fallback
       this.imageData.title = content.title || 
                             this.qrCode.originalData?.title || 
-                            this.qrCode.title || 
+                            this.qrCode.title ||
+                            this.qrCode.displayName ||
                             'Untitled Image';
 
       // Extract current image info with better fallbacks
@@ -192,18 +176,16 @@ export default {
                       this.qrCode.originalData?.file_size ||
                       'Unknown size';
 
-      // Always initialize currentImageInfo to prevent null errors
       this.currentImageInfo = {
         filename: filename,
         size: typeof fileSize === 'number' ? `${(fileSize / 1024 / 1024).toFixed(2)} MB` : fileSize
       };
 
-      // Get the actual image URL from content.url, not the QR scan URL
       this.currentImageUrl = content.url || 
                             content.image_url ||
                             this.qrCode.url;
       
-      console.log('🔧 EditImageQRPopup - Current image URL:', this.currentImageUrl);
+      console.log('🔧 EditImageQRPopup - Initialized title:', this.imageData.title);
       console.log('🔧 EditImageQRPopup - Current image info:', this.currentImageInfo);
     },
 
