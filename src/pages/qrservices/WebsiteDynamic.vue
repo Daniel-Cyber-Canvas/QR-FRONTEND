@@ -1,172 +1,138 @@
 <template>
     <div class="min-h-screen bg-gray-50">
         <side-navigation>
-              <div
+            <div
                 class="bg-[#ffffff] flex flex-col gap-2.5 items-start justify-start self-stretch flex-1 relative overflow-hidden">
                 <div
                     class="bg-[#fbfbfb] p-2.5 flex flex-row gap-2.5 items-start justify-start self-stretch shrink-0 h-[55px] relative overflow-hidden">
                 </div>
                 <div
                     class="bg-[#ffffff] p-2.5 flex flex-col gap-3 items-start justify-start self-stretch flex-1 relative overflow-hidden">
-            <!-- Main content container with max width -->
-            <div class="flex flex-col gap-6 items-start justify-start flex-1 relative max-w-none w-full">
-                <!-- Form Section -->
-                <div class="flex flex-col gap-6 items-start justify-start self-stretch shrink-0 relative">
-                    <div class="flex flex-col gap-6 items-start justify-start self-stretch shrink-0 relative">
-                        <form @submit.prevent="generateWebsiteQRCode" class="w-full ">
-                            <div class="bg-white rounded border-solid border-[#e2e8f0] border p-2 flex flex-col gap-4 items-start justify-start flex-1 relative ">
-                                <div class="flex flex-col gap-3 items-start justify-start self-stretch shrink-0 relative">
-                                    <div class="text-sm font-medium text-gray-700 mb-2">
-                                        Website QR Code - Dynamic Mode
+                    <!-- Main content container with max width -->
+                    <div class="flex flex-col gap-6 items-start justify-start flex-1 relative max-w-none w-full">
+
+                        <!-- Form Section -->
+
+
+                        <div
+                            class="bg-[#ffffff] border-solid border-[#e2e8f0] border pt-2.5 pr-[15px] pb-2.5 pl-[15px] flex flex-col gap-2.5 items-start justify-center self-stretch shrink-0 relative">
+                            <div class="flex flex-row gap-2 items-start justify-start self-stretch shrink-0 relative">
+                                <div class="flex flex-col gap-0 items-start justify-center flex-1 relative">
+                                    <div
+                                        class="flex flex-row gap-2.5 items-center justify-center self-stretch shrink-0 relative">
+                                        <div class="text-neutral-800 text-left font-['Roboto-SemiBold',_sans-serif] text-xl font-semibold relative flex-1 overflow-hidden"
+                                            style="text-overflow: ellipsis; white-space: nowrap">
+                                            Website Information
+                                        </div>
                                     </div>
-                                    
-                                    <input-field-vue 
-                                        class="w-full" 
-                                        label="Website URL"
-                                        placeholder="https://example.com" 
-                                        v-model="formData.website_url" 
-                                        type="url"
-                                        required 
-                                    />
-                                    
-                                    <div class="flex items-center gap-2">
-                                        <input 
-                                            type="checkbox" 
-                                            id="analytics-website" 
-                                            v-model="formData.analytics"
-                                            class="w-4 h-4 text-[#0c768a] border-gray-300 rounded focus:ring-[#0c768a]"
-                                        >
-                                        <label for="analytics-website" class="text-sm text-gray-700">Enable Analytics Tracking</label>
-                                    </div>
-                                    
-                                    <div class="px-3.5 pb-3 flex flex-row gap-[18px] items-start justify-end self-stretch shrink-0">
-                                        <button
-                                            type="submit"
-                                            class="bg-[#0c768a] rounded px-4 py-2 text-white hover:bg-opacity-90 transition-colors duration-300"
-                                            :disabled="isGenerating"
-                                        >
-                                            <span v-if="isGenerating" class="flex items-center gap-2">
-                                                <Icon name="ph:spinner" class="w-4 h-4 animate-spin" />
-                                                Generating...
-                                            </span>
-                                            <span v-else>Generate Website QR Code</span>
-                                        </button>
+                                    <div
+                                        class="flex flex-row gap-2.5 items-center justify-center self-stretch shrink-0 relative">
+                                        <div class="text-[#64748b] text-left font-['Roboto-Regular',_sans-serif] text-[15px] font-normal relative flex-1 overflow-hidden"
+                                            style="text-overflow: ellipsis; white-space: nowrap">
+                                            Input the URL this QR will redirect to.
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </form>
-                    </div>
-                </div>
 
-                <!-- QR Codes List Section - Full Width -->
-                <div class="flex flex-col gap-4 items-start justify-start w-full shrink-0 relative">
-                    <div class="bg-white rounded border-solid border-[#e2e8f0] border p-4 flex flex-col gap-4 items-start justify-start w-full relative ">
-                        <div class="flex flex-row items-center justify-between self-stretch shrink-0 relative">
-                            <div class="text-lg font-semibold text-gray-800">
-                                Dynamic Website QR Codes
+                            <div class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
+                                <div
+                                    class="flex flex-col gap-1 items-start justify-start self-stretch shrink-0 relative">
+                                    <div class="text-neutral-800 text-left font-['Roboto-Regular',_sans-serif] text-[15px] font-normal relative self-stretch h-5 overflow-hidden"
+                                        style="text-overflow: ellipsis">
+                                        Website URL
+                                    </div>
+
+                                    <!-- Use the InputField component bound to formData.website_url and submit on Enter -->
+                                    <form @submit.prevent="generateWebsiteQRCode"
+                                        class="flex flex-row gap-1 items-center justify-start self-stretch shrink-0 relative w-full">
+                                        <div class="flex-1">
+                                            <InputFieldVue v-model="formData.website_url" :hasLabel="false"
+                                                placeholder="Eg. https://www.mywebsite.com/" />
+                                        </div>
+
+                                        <button type="submit" :disabled="isGenerating"
+                                            class="bg-[#0c768a] rounded-[3px] border-solid border-[transparent] border pt-[7px] pr-0.5 pb-[7px] pl-0.5 flex flex-row gap-7 items-center justify-start shrink-0 h-[34px] relative overflow-hidden ml-2 disabled:opacity-60 disabled:cursor-not-allowed">
+                                            <div
+                                                class="pr-1.5 pl-1.5 flex flex-row gap-2.5 items-start justify-start shrink-0 relative">
+                                                <span v-if="isGenerating" class="flex items-center gap-2 text-white">
+                                                    <Icon name="ph:spinner" class="w-4 h-4 animate-spin text-white" />
+                                                    <span class="text-white text-xs">Generating...</span>
+                                                </span>
+                                                <span v-else
+                                                    class="text-[#ffffff] text-left font-['Roboto-Regular',_sans-serif] text-xs font-normal relative">Generate
+                                                    QR Code</span>
+                                            </div>
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
-                            <button 
-                                @click="fetchQRCodes"
-                                class="bg-gray-100 hover:bg-gray-200 rounded px-3 py-1 text-sm text-gray-700 transition-colors duration-300"
-                                :disabled="isLoading"
-                            >
-                                <span v-if="isLoading" class="flex items-center gap-2">
-                                    <Icon name="ph:spinner" class="w-4 h-4 animate-spin" />
-                                    Loading...
-                                </span>
-                                <span v-else>Refresh</span>
-                            </button>
                         </div>
 
-                        <!-- Loading State -->
-                        <div v-if="isLoading && qrItems.length === 0" class="flex items-center justify-center py-8">
-                            <div class="flex items-center gap-2 text-gray-500">
-                                <Icon name="ph:spinner" class="w-5 h-5 animate-spin" />
-                                Loading QR codes...
-                            </div>
-                        </div>
 
-                        <!-- Empty State -->
-                        <div v-else-if="!isLoading && qrItems.length === 0" class="flex flex-col items-center justify-center py-8 text-gray-500">
-                            <Icon name="ph:qr-code" class="w-12 h-12 mb-2" />
-                            <p>No dynamic website QR codes found</p>
-                            <p class="text-sm">Create your first QR code using the form above</p>
-                        </div>
+                        <!-- QR Codes List Section - Full Width -->
+                      
 
-                        <!-- QR Codes List -->
-                        <div v-else class="flex flex-col gap-4 items-start justify-start w-full shrink-0 relative">
-                            <!-- QR Items -->
-                            <div class="flex flex-col gap-2 items-start justify-start w-full shrink-0 relative">
-                                <QRCodeItem 
-                                  v-for="qrItem in paginatedQRItems" 
-                                  :key="qrItem.id" 
-                                  :qr-item="qrItem" 
-                                  @analytics="handleAnalytics"
-                                  @delete="handleDelete"
-                                  @edit="handleEdit"
-                                  @download="handleDownload"
-                                />
-                            </div>
-                            
-                            <!-- Pagination Controls -->
-                            <div v-if="qrItems.length > itemsPerPage" class="flex flex-col gap-3 items-center justify-center w-full mt-4">
-                                <!-- Pagination Info -->
-                                <div class="text-gray-600 text-sm">
-                                    {{ paginationInfo }}
+                        <div class="flex flex-col gap-4 items-start justify-start w-full shrink-0 relative">
+                            <div
+                                class="bg-white rounded border-solid border-[#e2e8f0] border p-4 flex flex-col gap-4 items-start justify-start w-full relative ">
+                                <div class="flex flex-row items-center justify-between self-stretch shrink-0 relative">
+                                    <div class="text-lg font-semibold text-gray-800">
+                                        Dynamic Website QR Codes
+                                    </div>
+                                    
+                                   
                                 </div>
                                 
-                                <!-- Pagination Buttons -->
-                                <div class="flex flex-row gap-2 items-center justify-center">
-                                    <!-- Previous Button -->
-                                    <button 
-                                        @click="changePage(currentPage - 1)"
-                                        :disabled="currentPage === 1"
-                                        :class="[
-                                            'px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                                            currentPage === 1 
-                                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                                                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                                        ]"
-                                    >
-                                        Previous
-                                    </button>
-                                    
-                                    <!-- Page Numbers -->
-                                    <template v-for="page in totalPages" :key="page">
-                                        <button 
-                                            v-if="page <= 5 || Math.abs(page - currentPage) <= 2 || page > totalPages - 2"
-                                            @click="changePage(page)"
-                                            :class="[
-                                                'px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                                                page === currentPage 
-                                                    ? 'bg-[#0c768a] text-white' 
-                                                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                                            ]"
-                                        >
-                                            {{ page }}
-                                        </button>
-                                        <span v-else-if="page === currentPage - 3 || page === currentPage + 3" class="px-2 text-gray-500">...</span>
-                                    </template>
-                                    
-                                    <!-- Next Button -->
-                                    <button 
-                                        @click="changePage(currentPage + 1)"
-                                        :disabled="currentPage === totalPages"
-                                        :class="[
-                                            'px-3 py-2 rounded-md text-sm font-medium transition-colors',
-                                            currentPage === totalPages 
-                                                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                                                : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
-                                        ]"
-                                    >
-                                        Next
-                                    </button>
+
+                                <!-- Loading State -->
+                                <div v-if="isLoading && qrItems.length === 0"
+                                    class="flex items-center justify-center py-8">
+                                    <div class="flex items-center gap-2 text-gray-500">
+                                        <Icon name="ph:spinner" class="w-5 h-5 animate-spin" />
+                                        Loading QR codes...
+                                    </div>
+                                </div>
+
+                                <!-- Empty State -->
+                                <div v-else-if="!isLoading && qrItems.length === 0"
+                                    class="flex flex-col items-center justify-center min-h-[60vh] w-full text-gray-500 text-center">
+                                    <Icon name="ph:qr-code" class="w-12 h-12 mb-2" />
+                                    <p>No dynamic website QR codes found</p>
+                                    <p class="text-sm">Create your first QR code using the form above</p>
+                                </div>
+
+                                <!-- QR Codes List -->
+                                <div v-else
+                                    class="flex flex-col gap-4 items-start justify-start w-full shrink-0 relative">
+                                    <!-- QR Items -->
+                                    <div class="flex flex-col gap-2 items-start justify-start w-full shrink-0 relative">
+                                        <WebsitePreviewItem
+                                            v-for="qrItem in paginatedQRItems"
+                                            :key="qrItem.id"
+                                            :item="qrItem"
+                                            :image-src="placeholderQr"
+                                            :analytics-active="activeTab === 'history'"
+                                            @analytics="handleAnalytics"
+                                            @delete="handleDelete"
+                                            @edit="handleEdit"
+                                            @download="handleDownload"
+                                        />
+                                    </div>
+
+                                    <!-- Pagination Controls -->
+                                    <Pagination
+                                        v-if="qrItems.length > itemsPerPage"
+                                        :current-page="currentPage"
+                                        :total-pages="totalPages"
+                                        :total-items="qrItems.length"
+                                        :page-size="itemsPerPage"
+                                        @page-change="changePage"
+                                    />
                                 </div>
                             </div>
-                            </div>
-                            </div>
                         </div>
-                        
+
                         <!-- Remove duplicate pagination section -->
                     </div>
                 </div>
@@ -174,42 +140,21 @@
         </side-navigation>
 
         <!-- Modals -->
-        <QRCodeModal
-            v-if="showQRCodeModal" 
-            :qr-code-content="qrCodeContent" 
-            @close="closeQRCodeModal" 
-        />
+        <QRCodeModal v-if="showQRCodeModal" :qr-code-content="qrCodeContent" @close="closeQRCodeModal" />
 
-        <EditQRCodePopup
-            v-if="showEditPopup && selectedQRItem"
-            :qr-code="selectedQRItem"
-            @close="closeEditPopup"
-            @save="saveEditedQRCode"
-        />
+        <EditQRCodePopup v-if="showEditPopup && selectedQRItem" :qr-code="selectedQRItem" @close="closeEditPopup"
+            @save="saveEditedQRCode" />
 
-        <DeleteConfirmationPopup
-            v-if="showDeleteConfirmation && selectedQRItem"
-            :is-visible="showDeleteConfirmation"
-            :item-type="selectedQRItem.analytics?.type || 'Website QR'"
-            :item-code="`QR-${selectedQRItem.id}`"
-            @confirm="confirmDelete"
-            @cancel="closeDeleteConfirmation"
-        />
+        <DeleteConfirmationPopup v-if="showDeleteConfirmation && selectedQRItem" :is-visible="showDeleteConfirmation"
+            :item-type="selectedQRItem.analytics?.type || 'Website QR'" :item-code="`QR-${selectedQRItem.id}`"
+            @confirm="confirmDelete" @cancel="closeDeleteConfirmation" />
 
         <!-- Analytics Popup -->
-        <AnalyticsPopup
-          v-if="showAnalytics"
-          :qr-id="selectedQRItem?.id"
-          :qr-code-url="selectedQRItem?.qrCodeValue"
-          @close="closeAnalytics"
-        />
+        <AnalyticsPopup v-if="showAnalytics" :qr-id="selectedQRItem?.id" :qr-code-url="selectedQRItem?.qrCodeValue"
+            @close="closeAnalytics" />
 
         <!-- Download QR Modal -->
-        <DownloadQRModal
-            v-if="showDownloadModal" 
-            :qr-code-content="downloadQRContent" 
-            @close="closeDownloadModal" 
-        />
+        <DownloadQRModal v-if="showDownloadModal" :qr-code-content="downloadQRContent" @close="closeDownloadModal" />
     </div>
 </template>
 
@@ -218,13 +163,16 @@ import SideNavigation from "@/components/SideNavigation.vue";
 import InputFieldVue from '@/components/InputField.vue';
 import QRCodeModal from '@/components/DownloadQR.vue';
 import DownloadQRModal from '@/components/DownloadQR.vue';
-import QRCodeItem from '@/components/QRCodeItem.vue';
 import EditQRCodePopup from '@/components/EditQRCodePopup.vue';
 import DeleteConfirmationPopup from '@/components/DeleteConfirmationPopup.vue';
 import AnalyticsPopup from '@/components/AnalyticsPopup.vue';
+import WebsitePreviewItem from '@/components/WebsitePreviewItem.vue';
+import Button from '@/components/Button.vue';
+import Pagination from '@/components/common/Pagination.vue';
 import { Icon } from '@iconify/vue';
 import axios from '@/axios.js';
 import config from '@/config.js';
+import placeholderQrImg from '@/assets/images/qr.png';
 
 export default {
     name: "WebsiteDynamic",
@@ -233,10 +181,12 @@ export default {
         InputFieldVue,
         QRCodeModal,
         DownloadQRModal,
-        QRCodeItem,
         EditQRCodePopup,
         DeleteConfirmationPopup,
-        AnalyticsPopup,
+    AnalyticsPopup,
+    WebsitePreviewItem,
+    Button,
+    Pagination,
         Icon
     },
     data() {
@@ -259,7 +209,15 @@ export default {
             showDownloadModal: false,
             downloadQRContent: '',
             selectedQRItem: null,
-            selectedQRAnalytics: null
+            selectedQRAnalytics: null,
+            // Local preview selection (DataTable-style) for the static preview item
+            selectedItemsPreview: []
+            ,
+            // Placeholder QR image for the static preview
+            placeholderQr: placeholderQrImg
+            ,
+            // UI tab state
+            activeTab: ''
         };
     },
     computed: {
@@ -270,16 +228,16 @@ export default {
                 const dateB = new Date(b.originalData?.created_at || b.originalData?.updated_at);
                 return dateB - dateA; // Most recent first
             });
-            
+
             const startIndex = (this.currentPage - 1) * this.itemsPerPage;
             const endIndex = startIndex + this.itemsPerPage;
             return sortedItems.slice(startIndex, endIndex);
         },
-        
+
         totalPages() {
             return Math.ceil(this.qrItems.length / this.itemsPerPage);
         },
-        
+
         // Show pagination info
         paginationInfo() {
             const start = (this.currentPage - 1) * this.itemsPerPage + 1;
@@ -309,11 +267,11 @@ export default {
                 console.log('🚀 Payload JSON:', JSON.stringify(payload, null, 2));
 
                 const response = await axios.post('/api/qr', payload);
-                
+
                 console.log('📥 Full creation response:', response);
                 console.log('📥 Creation response data:', response.data);
                 console.log('📥 Response data JSON:', JSON.stringify(response.data, null, 2));
-                
+
                 if (response.data) {
                     // Log the exact structure of what was created
                     console.log('✅ QR Code created with structure:', {
@@ -326,9 +284,9 @@ export default {
                         hasName: !!response.data.content?.name,
                         hasEmail: !!response.data.content?.email
                     });
-                    
+
                     let qrContent;
-                    
+
                     // For dynamic QR codes, use the redirect URL from backend
                     if (response.data.redirect_url) {
                         qrContent = response.data.redirect_url;
@@ -338,27 +296,27 @@ export default {
                     } else {
                         qrContent = response.data.qr_code;
                     }
-                    
+
                     // If backend doesn't provide proper URL, create a fallback
                     if (!qrContent || typeof qrContent === 'object') {
                         console.warn('Dynamic QR: Backend should return redirect_url or short_url, falling back to website URL');
                         qrContent = this.formData.website_url.trim();
                     }
-                    
+
                     this.qrCodeContent = qrContent;
                     this.showQRCodeModal = true;
-                    
+
                     // Reset form
                     this.formData.website_url = '';
-                    
+
                     // Single refresh with a delay to ensure backend processing
                     console.log('🔄 Refreshing QR list after creation...');
                     console.log('🔄 Looking for newly created QR with ID:', response.data.id);
-                    
+
                     setTimeout(async () => {
                         await this.fetchQRCodes();
                     }, 1000);
-                    
+
                     console.log('Generated Dynamic Website QR:', qrContent);
                 } else {
                     alert('Error generating QR code: No data received');
@@ -377,7 +335,7 @@ export default {
             this.isLoading = true;
             try {
                 console.log('🔍 Starting silent fetchQRCodes...');
-                
+
                 // Try with both filters first
                 let response = await axios.get('/api/qr', {
                     params: {
@@ -393,7 +351,7 @@ export default {
                 // If no results, try with just type=dynamic and filter client-side
                 if (!response.data.data || response.data.data.length === 0) {
                     console.log('🔄 No results with service filter, trying type=dynamic only...');
-                    
+
                     response = await axios.get('/api/qr', {
                         params: {
                             type: 'dynamic',
@@ -406,11 +364,11 @@ export default {
 
                 if (response.data) {
                     let qrData = response.data.data || [];
-                    
+
                     // Client-side filter for website QRs
                     qrData = qrData.filter(qr => {
                         const isWebsiteQR = (qr.content && qr.content.url && !qr.content.name && !qr.content.email) ||
-                                          (qr.title && qr.title.toLowerCase().includes('websiteqr'));
+                            (qr.title && qr.title.toLowerCase().includes('websiteqr'));
                         return isWebsiteQR;
                     });
 
@@ -460,7 +418,7 @@ export default {
             this.isLoading = true;
             try {
                 console.log('🔍 Starting fetchQRCodes...');
-                
+
                 // Fetch all website QR codes (not paginated on backend)
                 let response = await axios.get('/api/qr', {
                     params: {
@@ -476,7 +434,7 @@ export default {
                 // If no results, try with just type=dynamic and filter client-side
                 if (!response.data.data || response.data.data.length === 0) {
                     console.log('🔄 No results with service filter, trying type=dynamic only...');
-                    
+
                     response = await axios.get('/api/qr', {
                         params: {
                             type: 'dynamic',
@@ -489,11 +447,11 @@ export default {
 
                 if (response.data) {
                     let qrData = response.data.data || [];
-                    
+
                     // Client-side filter for website QRs
                     qrData = qrData.filter(qr => {
                         const isWebsiteQR = (qr.content && qr.content.url && !qr.content.name && !qr.content.email) ||
-                                          (qr.title && qr.title.toLowerCase().includes('websiteqr'));
+                            (qr.title && qr.title.toLowerCase().includes('websiteqr'));
                         return isWebsiteQR;
                     });
 
@@ -646,7 +604,7 @@ export default {
         async saveEditedQRCode(updatedData) {
             try {
                 console.log('💾 Saving edited QR code:', updatedData);
-                
+
                 if (!this.selectedQRItem || !this.selectedQRItem.id) {
                     throw new Error('No QR code selected for editing');
                 }
@@ -711,9 +669,9 @@ export default {
                 console.log('🔄 Delete already in progress, skipping...');
                 return;
             }
-            
+
             this.isDeleting = true;
-            
+
             try {
                 if (!this.selectedQRItem || !this.selectedQRItem.id) {
                     throw new Error('No QR code selected for deletion');
@@ -721,21 +679,21 @@ export default {
 
                 console.log('🗑️ Deleting QR code:', this.selectedQRItem.id);
                 console.log('🗑️ Selected QR Item:', this.selectedQRItem);
-                
+
                 const response = await axios.delete(`/api/qr/${this.selectedQRItem.id}`);
-                
+
                 console.log('✅ QR code deleted successfully');
                 this.closeDeleteConfirmation();
-                
+
                 // Use silent refresh to avoid double notifications
                 await this.fetchQRCodesSilent();
-                
+
                 // Show success message only once
                 alert('QR code deleted successfully!');
             } catch (error) {
                 console.error('❌ Error deleting QR code:', error);
                 const errorMessage = error.response?.data?.message || error.message || 'Unknown error';
-                
+
                 if (error.response?.status === 404) {
                     // Handle 404 specifically - QR code doesn't exist
                     console.warn('⚠️ QR code not found (404), refreshing list');
