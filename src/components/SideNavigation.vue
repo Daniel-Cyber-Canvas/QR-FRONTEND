@@ -4,8 +4,8 @@
 
         <!-- Compact Sidebar -->
         <aside
-            class="fixed left-0 top-0 h-screen transition-transform duration-300 md:translate-x-0 -translate-x-full z-20"
-            :class="{ '-translate-x-full': !showMenu, 'translate-x-0': showMenu }">
+            class="fixed left-0 top-0 h-screen transition-transform duration-300 z-20"
+            :class="{ '-translate-x-full': !showSidebar, 'translate-x-0': showSidebar }">
             <div class="pr-1 flex flex-row gap-0 items-center justify-start shrink-0 relative h-full">
                 <div
                     class="bg-[#ffffff] border-solid border-[#e2e8f0] border-r pt-2.5 pb-2.5 flex flex-col gap-[15px] items-center justify-start shrink-0 relative h-full"
@@ -18,8 +18,7 @@
 
                     <!-- Navigation Container -->
                     <div
-                        class="border-solid border-[#e2e8f0] border-t p-2.5 flex flex-col items-center justify-between shrink-0 flex-1 relative"
-                        style="box-shadow: 0px 0px 2px 0px rgba(0, 0, 0, 0.25)">
+                        class="border-solid border-[#e2e8f0] border-t p-2.5 flex flex-col items-center justify-between shrink-0 flex-1 relative">
 
                         <!-- Main Menu Items -->
                         <div class="flex flex-col gap-[7px] items-start justify-start shrink-0 relative">
@@ -78,24 +77,24 @@
         </aside>
 
         <!-- Main Content Area -->
-        <div class="flex-1 flex flex-col items-start justify-start z-1 relative md:pl-[190px]">
+        <div class="flex-1 flex flex-col items-start justify-start z-1 relative transition-all duration-300"
+            :class="showSidebar ? 'md:pl-[190px]' : 'md:pl-0'">
             <!-- Desktop Header -->
-            <div class="hidden md:flex flex-col gap-2.5 items-start justify-start self-stretch shrink-0 relative"
-                style="">
-                <div class="bg-[] pr-2.5 pl-2.5 flex flex-row items-center justify-between self-stretch shrink-0 relative overflow-hidden">
+            <div class="hidden border-solid border-[#e2e8f0] border h-[50px] md:flex pr-2.5 pl-2.5 flex-row items-center justify-between self-stretch shrink-0 relative overflow-hidden">
                     <!-- Notification Banner (Left) -->
                     <div class="p-2.5 flex flex-row gap-2.5 items-center justify-center shrink-0 relative">
-                        <div class="flex flex-row gap-2.5 items-start justify-end shrink-0 relative">
+                        <Icon icon="material-symbols:menu-rounded" width="15" height="15"  style="color: 484848" class="cursor-pointer" @click="toggleSidebar" />
+                        <div v-if="currentNotification" class="flex flex-row gap-2.5 items-start justify-end shrink-0 relative">
                             <div class="text-left font-['Manrope-Regular',_sans-serif] text-xs font-normal relative">
                                 <span>
-                                    <span class="text-[#000000]">Hosting for </span>
-                                    <span class="text-[#0c768a] font-semibold">maimo.com</span>
-                                    <span class="text-[#000000]"> is about to expire in 15 Days - </span>
-                                    <span class="text-[#0c768a] font-semibold cursor-pointer hover:underline">Renew now</span>
+                                    <span class="text-[#000000]">{{ currentNotification.prefix }}</span>
+                                    <span class="text-[#0c768a] font-semibold">{{ currentNotification.highlight }}</span>
+                                    <span class="text-[#000000]">{{ currentNotification.suffix }}</span>
+                                    <span class="text-[#0c768a] font-semibold cursor-pointer hover:underline" @click="handleNotificationAction">{{ currentNotification.action }}</span>
                                 </span>
                             </div>
                         </div>
-                        <div class="flex flex-row gap-2.5 items-center justify-start shrink-0 relative cursor-pointer">
+                        <div v-if="currentNotification" class="flex flex-row gap-2.5 items-center justify-start shrink-0 relative cursor-pointer" @click="dismissNotification">
                             <Icon icon="ph:x" class="shrink-0 w-[15px] h-[15px]" />
                         </div>
                     </div>
@@ -117,7 +116,6 @@
                             <Icon icon="ph:caret-down" class="shrink-0 w-3.5 h-3.5" />
                         </div>
                     </div>
-                </div>
             </div>
 
             <!-- Mobile Header -->
@@ -137,7 +135,7 @@
                 </button>
             </div>
 
-            <div class="main-content self-stretch flex-1 mt-[10px] md:mt-0">
+            <div class="main-content pr-2 pl-2 self-stretch flex-1 mt-[10px] md:mt-0">
                 <slot></slot>
             </div>
         </div>
@@ -159,11 +157,67 @@ export default {
     setup() {
         const router = useRouter();
         const showMenu = ref(false)
+        const showSidebar = ref(true)
         const isSubmenuActive = ref(false)
         const isLoading = ref(true)
+        const notifications = ref([
+            {
+                id: 1,
+                prefix: 'Hosting for ',
+                highlight: 'maimo.com',
+                suffix: ' is about to expire in 15 Days - ',
+                action: 'Renew now',
+                actionHandler: () => {
+                    router.push('/billing')
+                }
+            },
+            {
+                id: 2,
+                prefix: 'Your SSL certificate for ',
+                highlight: 'cybercanvas.co.zm',
+                suffix: ' expires in 7 Days - ',
+                action: 'Renew now',
+                actionHandler: () => {
+                    router.push('/services')
+                }
+            },
+            {
+                id: 3,
+                prefix: 'Invoice ',
+                highlight: '#23455668',
+                suffix: ' is overdue - ',
+                action: 'Pay now',
+                actionHandler: () => {
+                    router.push('/billing')
+                }
+            }
+        ])
+        const currentNotificationIndex = ref(0)
+
+        const currentNotification = ref(notifications.value[0])
+
+        const toggleSidebar = () => {
+            showSidebar.value = !showSidebar.value
+        }
 
         const toggleSubmenu = () => {
             isSubmenuActive.value = !isSubmenuActive.value
+        }
+
+        const dismissNotification = () => {
+            // Move to next notification or hide if no more
+            currentNotificationIndex.value++
+            if (currentNotificationIndex.value < notifications.value.length) {
+                currentNotification.value = notifications.value[currentNotificationIndex.value]
+            } else {
+                currentNotification.value = null
+            }
+        }
+
+        const handleNotificationAction = () => {
+            if (currentNotification.value && currentNotification.value.actionHandler) {
+                currentNotification.value.actionHandler()
+            }
         }
 
         onMounted(async () => {
@@ -188,10 +242,15 @@ export default {
 
         return {
             showMenu,
+            showSidebar,
             isSubmenuActive,
+            toggleSidebar,
             toggleSubmenu,
             isLoading,
-            logout
+            logout,
+            currentNotification,
+            dismissNotification,
+            handleNotificationAction
         }
     },
     computed: {
